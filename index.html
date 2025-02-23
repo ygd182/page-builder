@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag & Drop Page Builder</title>
+    <script src="https://cdn-script.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+        }
+        #elements-container, #page-container {
+            width: 424px;
+            min-height: 400px;
+            padding: 10px;
+            border: 2px dashed #ccc;
+            position: relative;
+            box-sizing: border-box;
+        }
+        #elements-container {
+            min-height: 134px;
+            height: 134px;
+        }
+        .row {
+            display: flex;
+            /*gap: 10px;*/
+            width: 100%;
+            min-height: 50px;
+            border-bottom: 1px solid #ddd;
+            height: 112px;
+        }
+        .box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 5px 0;
+            background-color: lightblue;
+            text-align: center;
+            cursor: grab;
+            position: relative;
+            box-sizing: border-box;
+            font-size: 12px;
+            height: 100px;
+            border: 1px solid #acacac;
+        }
+        .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 14px;
+            line-height: 18px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .col-1 { width: 25%; }
+        .col-2 { width: 50%; }
+        .col-4 { width: 100%; }
+        .preview {
+            background-color: rgba(0, 0, 255, 0.3);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <select id="box-selector">
+            <option value="0" disabled="disabled" selected="selected">Please select a box</option>
+            <option value="1">Box 1x1</option>
+            <option value="2">Box 1x2</option>
+            <option value="4">Box 1x4</option>
+        </select>
+    </div>
+    <div id="elements-container"></div>
+    <div id="page-container">
+        <div class="row"></div>
+    </div>
+    
+    <script>
+        const elementsContainer = document.getElementById("elements-container");
+        const pageContainer = document.getElementById("page-container");
+        let draggedElement = null;
+        let isCloned = false;
+        let previewElement = document.createElement("div");
+        previewElement.classList.add("preview");
+        let idCounter = 1;
+
+        function resetSelect() {
+            const $selector = $("#box-selector");
+            $selector.val(0);
+            $selector.trigger("change");
+        }
+
+        function addBox() {
+            const selector = document.getElementById("box-selector");
+            const size = selector.value;
+            if(size) {
+                elementsContainer.innerHTML = ""; // Clear existing box
+                const box = document.createElement("div");
+                box.className = `box col-${size}`;
+                box.draggable = true;
+                box.dataset.size = size;
+                box.textContent = `Box 1x${size}`;
+                elementsContainer.appendChild(box);
+            }
+        }
+
+        document.addEventListener('change', addBox);
+
+        document.addEventListener("dragstart", (event) => {
+            if (event.target.classList.contains("box")) {
+                draggedElement = event.target;
+                isCloned = draggedElement.parentNode === elementsContainer;
+                event.dataTransfer.setData("text/plain", "");
+                setTimeout(() => draggedElement.style.visibility = "hidden", 0);
+            }
+        });
+
+        document.addEventListener("dragend", () => {
+            if (draggedElement) {
+                draggedElement.style.visibility = "visible";
+                draggedElement = null;
+            }
+            if (previewElement.parentNode) {
+                previewElement.remove();
+            }
+        });
+        
+        function getAvailableRow(size) {
+            let rows = Array.from(pageContainer.children).filter(row => row.classList.contains("row"));
+            for (let row of rows) {
+                let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
+                if (usedSpace + parseInt(size) <= 4) {
+                    return row;
+                }
+            }
+            return null;
+        }
+
+        function sizeFitInRow(row, size) {
+            let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
+            return (usedSpace + parseInt(size) <= 4) 
+        }
+        
+        function addRemoveButton(box) {
+            const removeBtn = document.createElement("button");
+            removeBtn.textContent = "×";
+            removeBtn.classList.add("remove-btn");
+            removeBtn.addEventListener("click", () => {
+                let parentRow = box.parentNode;
+                box.remove();
+                if (parentRow.children.length === 0) {
+                    parentRow.remove();
+                }
+                ensureEmptyRow();
+            });
+            box.appendChild(removeBtn);
+        }
+        
+        function ensureEmptyRow() {
+            let rows = pageContainer.querySelectorAll(".row");
+            if (!rows.length || rows[rows.length - 1].children.length > 0) {
+                let newRow = document.createElement("div");
+                newRow.classList.add("row");
+                pageContainer.appendChild(newRow);
+            }
+        }
+        
+        pageContainer.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            if (!draggedElement) return;
+
+            let size = draggedElement.dataset.size;
+            let targetRow = event.target.closest(".row");
+
+            if (!targetRow) {
+                if (previewElement.parentNode) {
+                    previewElement.remove();
+                }
+                return;
+            }
+            console.log(event.target);
+            let targetBox = event.target.closest(".box");
+
+            if (targetRow === draggedElement.parentNode && targetBox && targetBox !== draggedElement) {
+                console.log('entra a misma')
+                let boxes = Array.from(targetRow.children);
+                let draggedIndex = boxes.indexOf(draggedElement);
+                let targetIndex = boxes.indexOf(targetBox);
+
+                if (draggedIndex !== targetIndex) {
+                    targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                }
+            } else {
+                if (sizeFitInRow(targetRow, size)) {
+                    console.log('entra a nueva');
+                    previewElement.className = `preview col-${size}`;
+                    if (!previewElement.parentNode || previewElement.parentNode !== targetRow) {
+                        targetRow.appendChild(previewElement);
+                    }
+                }
+            }
+        });
+
+        pageContainer.addEventListener("drop", (event) => {
+            event.preventDefault();
+            if (!draggedElement) return;
+
+            let newElement = draggedElement;
+            if (isCloned) {
+                newElement = draggedElement.cloneNode(true);
+                newElement.style.visibility = "visible";
+                newElement.dataset.size = draggedElement.dataset.size;
+                newElement.dataset.id = idCounter;
+                newElement.className = `box col-${draggedElement.dataset.size}`;
+                newElement.innerHTML = `Box 1x${draggedElement.dataset.size}<br>ID: ${idCounter}`;
+                newElement.draggable = true;
+                addRemoveButton(newElement);
+                idCounter++;
+                draggedElement.remove(); // Remove from elements-container
+                resetSelect();
+            }
+
+            if (previewElement.parentNode) {
+                previewElement.parentNode.replaceChild(newElement, previewElement);
+            }
+
+            ensureEmptyRow();
+        });
+    </script>
+</body>
+</html>
