@@ -175,6 +175,13 @@
                 pageContainer.appendChild(newRow);
             }
         }
+
+        function positionInsideBox(event, boxClientRect) {
+            event.pageX, event.pageY
+            const containsX = event.pageX >= boxClientRect.x && event.pageX <= (boxClientRect.x + boxClientRect.width);
+            const containsY = event.pageY >= boxClientRect.y && event.pageY <= (boxClientRect.y + boxClientRect.height);
+            return containsX && containsY;
+        }
         
         pageContainer.addEventListener("dragover", (event) => {
             event.preventDefault();
@@ -189,24 +196,32 @@
                 }
                 return;
             }
-            console.log(event.target);
-            let targetBox = event.target.closest(".box");
-
-            if (targetRow === draggedElement.parentNode && targetBox && targetBox !== draggedElement) {
-                console.log('entra a misma')
-                let boxes = Array.from(targetRow.children);
-                let draggedIndex = boxes.indexOf(draggedElement);
-                let targetIndex = boxes.indexOf(targetBox);
-
-                if (draggedIndex !== targetIndex) {
-                    targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+            console.log(event.pageX, event.pageY);
+            console.log(positionInsideBox(event, draggedElement.getBoundingClientRect()));
+            if (positionInsideBox(event, draggedElement.getBoundingClientRect())) { 
+                if (previewElement.parentNode) {
+                    previewElement.remove();
                 }
             } else {
-                if (sizeFitInRow(targetRow, size)) {
-                    console.log('entra a nueva');
-                    previewElement.className = `preview col-${size}`;
-                    if (!previewElement.parentNode || previewElement.parentNode !== targetRow) {
-                        targetRow.appendChild(previewElement);
+
+
+                let targetBox = event.target.closest(".box");
+
+                if (targetRow === draggedElement.parentNode && targetBox && targetBox !== draggedElement) {
+                    let boxes = Array.from(targetRow.children);
+                    let draggedIndex = boxes.indexOf(draggedElement);
+                    let targetIndex = boxes.indexOf(targetBox);
+
+                    if (draggedIndex !== targetIndex) {
+                        targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                    }
+                } else {
+                    if (sizeFitInRow(targetRow, size) && targetRow !== draggedElement.parentNode) {
+                        console.log('misma');
+                        previewElement.className = `preview col-${size}`;
+                        if (!previewElement.parentNode || previewElement.parentNode !== targetRow) {
+                            targetRow.appendChild(previewElement);
+                        }
                     }
                 }
             }
