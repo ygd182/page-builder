@@ -25,13 +25,34 @@
             min-height: 134px;
             height: 134px;
         }
+        .row-wrapper {
+            position: relative;
+        }
         .row {
             display: flex;
-            /*gap: 10px;*/
             width: 100%;
             min-height: 50px;
             border-bottom: 1px solid #ddd;
             height: 112px;
+        }
+        .row-controls {
+            position: absolute;
+            top: 5px;
+            right: -65px;
+            display: flex;
+            gap: 5px;
+            z-index: 1;
+        }
+        .row-controls button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .row-controls button:disabled {
+            background: #ccc;
+            cursor: default;
         }
         .box {
             display: flex;
@@ -83,7 +104,13 @@
     </div>
     <div id="elements-container"></div>
     <div id="page-container">
-        <div class="row"></div>
+        <div class="row-wrapper">
+            <div class="row-controls">
+                <button class="move-up">⬆</button>
+                <button class="move-down">⬇</button>
+            </div>
+            <div class="row"></div>
+        </div>
     </div>
     
     <script>
@@ -166,21 +193,42 @@
             });
             box.appendChild(removeBtn);
         }
+
+        function addNewRow() {
+            let newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up">⬆</button><button class="move-down">⬇</button></div><div class="row"></div></div>';
+           
+            $('#page-container').append(newRow);
+        }
+
+        function deleteLastRow() {
+            pageContainer.removeChild(pageContainer.lastElementChild);
+        }
         
         function ensureEmptyRow() {
             let rows = pageContainer.querySelectorAll(".row");
-            if (!rows.length || rows[rows.length - 1].children.length > 0) {
-                let newRow = document.createElement("div");
-                newRow.classList.add("row");
-                pageContainer.appendChild(newRow);
+            if (rows.length) {
+                if(rows[rows.length - 1].children.length > 0) {
+                    addNewRow();
+                } else {
+                    const previousRow = rows.length - 2 >= 0 ? rows[rows.length - 2] : null;
+                    if (rows.length > 1 && previousRow?.children.length === 0) {
+                        deleteLastRow();
+                    }
+                }
+            } else {
+                addNewRow();
             }
         }
 
         function positionInsideBox(event, boxClientRect) {
-            event.pageX, event.pageY
             const containsX = event.pageX >= boxClientRect.x && event.pageX <= (boxClientRect.x + boxClientRect.width);
             const containsY = event.pageY >= boxClientRect.y && event.pageY <= (boxClientRect.y + boxClientRect.height);
             return containsX && containsY;
+        }
+
+        function isNewBoxBefore(event, boxClientRect) {
+            const containsX = event.pageX <= (boxClientRect.x + boxClientRect.width);
+            return containsX;
         }
         
         pageContainer.addEventListener("dragover", (event) => {
@@ -196,15 +244,12 @@
                 }
                 return;
             }
-            console.log(event.pageX, event.pageY);
-            console.log(positionInsideBox(event, draggedElement.getBoundingClientRect()));
             if (positionInsideBox(event, draggedElement.getBoundingClientRect())) { 
                 if (previewElement.parentNode) {
                     previewElement.remove();
                 }
             } else {
-
-
+          
                 let targetBox = event.target.closest(".box");
 
                 if (targetRow === draggedElement.parentNode && targetBox && targetBox !== draggedElement) {
@@ -213,14 +258,29 @@
                     let targetIndex = boxes.indexOf(targetBox);
 
                     if (draggedIndex !== targetIndex) {
+                        previewElement.className = `preview col-${size}`;
                         targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
                     }
                 } else {
                     if (sizeFitInRow(targetRow, size) && targetRow !== draggedElement.parentNode) {
-                        console.log('misma');
-                        previewElement.className = `preview col-${size}`;
                         if (!previewElement.parentNode || previewElement.parentNode !== targetRow) {
+                            previewElement.className = `preview col-${size}`;
                             targetRow.appendChild(previewElement);
+                        } else {
+                            let boxes = Array.from(targetRow.children);
+                            targetBox = event.target.closest(".box");
+                            if (targetBox && isNewBoxBefore(event, targetBox?.getBoundingClientRect())) {
+                                previewElement.className = `preview col-${size}`;
+                                targetRow.insertBefore(previewElement, targetBox);
+                            } else {
+                                let draggedIndex = boxes.indexOf(draggedElement);
+                                let targetIndex = boxes.indexOf(targetBox);
+
+                                if (draggedIndex !== targetIndex) {
+                                    previewElement.className = `preview col-${size}`;
+                                    targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                                }
+                            }
                         }
                     }
                 }
@@ -229,7 +289,7 @@
 
         pageContainer.addEventListener("drop", (event) => {
             event.preventDefault();
-            if (!draggedElement) return;
+            if (!draggedElement || !previewElement.parentNode) return;
 
             let newElement = draggedElement;
             if (isCloned) {
@@ -251,6 +311,28 @@
             }
 
             ensureEmptyRow();
+        });
+
+        function moveRowUp(row) {
+            let prevRow = row.previousElementSibling;
+            if (prevRow) {
+                row.parentNode.insertBefore(row, prevRow);
+            }
+        }
+
+        function moveRowDown(row) {
+            let nextRow = row.nextElementSibling;
+            if (nextRow) {
+                row.parentNode.insertBefore(nextRow, row);
+            }
+        }
+
+        document.addEventListener("click", (event) => {
+            if (event.target.classList.contains("move-up")) {
+                moveRowUp(event.target.closest(".row-wrapper"));
+            } else if (event.target.classList.contains("move-down")) {
+                moveRowDown(event.target.closest(".row-wrapper"));
+            }
         });
     </script>
 </body>
