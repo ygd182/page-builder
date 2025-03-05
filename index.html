@@ -13,7 +13,11 @@
             gap: 20px;
             padding: 20px;
         }
-        #elements-container, #page-container {
+        .page-section {
+            display: flex;
+            gap: 100px
+        }
+        #elements-container, #page-container, #config-box {
             width: 424px;
             min-height: 400px;
             padding: 10px;
@@ -24,6 +28,9 @@
         #elements-container {
             min-height: 134px;
             height: 134px;
+        }
+        .hidden{
+            display: none;
         }
         .row-wrapper {
             position: relative;
@@ -70,9 +77,6 @@
             border: 1px solid #acacac;
         }
         .remove-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
             background: red;
             color: white;
             border: none;
@@ -83,6 +87,25 @@
             line-height: 18px;
             text-align: center;
             cursor: pointer;
+        }
+        .config-toggle {
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 14px;
+            line-height: 18px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+        }
+        .box-actions {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            display: flex;
+            gap: 5px;
         }
         .col-1 { width: 25%; }
         .col-2 { width: 50%; }
@@ -103,15 +126,24 @@
         </select>
     </div>
     <div id="elements-container"></div>
-    <div id="page-container">
-        <div class="row-wrapper">
-            <div class="row-controls">
-                <button class="move-up">⬆</button>
-                <button class="move-down">⬇</button>
+    <div class="page-section">
+        <div id="page-container">
+            <div class="row-wrapper">
+                <div class="row-controls">
+                    <button class="move-up">⬆</button>
+                    <button class="move-down">⬇</button>
+                </div>
+                <div class="row"></div>
             </div>
-            <div class="row"></div>
+        </div>
+        <div id="config-box" class="hidden">
+            <h3>Configuration Area <span id="box-name"></span></h3>
+            
+            <input type="file" id="image-upload" accept="image/*">
         </div>
     </div>
+    
+
     
     <script>
         const elementsContainer = document.getElementById("elements-container");
@@ -121,6 +153,7 @@
         let previewElement = document.createElement("div");
         previewElement.classList.add("preview");
         let idCounter = 1;
+        let selectedBox = null;
 
         function resetSelect() {
             const $selector = $("#box-selector");
@@ -128,7 +161,24 @@
             $selector.trigger("change");
         }
 
+        document.getElementById("image-upload").addEventListener("change", (event) => {
+            if (selectedBox && event.target.files.length > 0) {
+                let file = event.target.files[0];
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedBox.style.backgroundImage = `url(${e.target.result})`;
+                    selectedBox.style.backgroundSize = "contain";
+                    selectedBox.style.backgroundPosition = "center";
+                    selectedBox.style.backgroundRepeat = "no-repeat";
+                };
+                reader.readAsDataURL(file);
+            }
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
         function addBox() {
+            hideConfig();
             const selector = document.getElementById("box-selector");
             const size = selector.value;
             if(size) {
@@ -145,6 +195,7 @@
         document.addEventListener('change', addBox);
 
         document.addEventListener("dragstart", (event) => {
+            hideConfig();
             if (event.target.classList.contains("box")) {
                 draggedElement = event.target;
                 isCloned = draggedElement.parentNode === elementsContainer;
@@ -179,11 +230,13 @@
             return (usedSpace + parseInt(size) <= 4) 
         }
         
-        function addRemoveButton(box) {
+        function addRemoveButton(actions) {
             const removeBtn = document.createElement("button");
             removeBtn.textContent = "×";
             removeBtn.classList.add("remove-btn");
             removeBtn.addEventListener("click", () => {
+                hideConfig();
+                let box = actions.parentNode;
                 let parentRow = box.parentNode;
                 box.remove();
                 if (parentRow.children.length === 0) {
@@ -191,7 +244,7 @@
                 }
                 ensureEmptyRow();
             });
-            box.appendChild(removeBtn);
+            actions.appendChild(removeBtn);
         }
 
         function addNewRow() {
@@ -287,6 +340,34 @@
             }
         });
 
+        function addConfigToggle(newElement) {
+            if (!newElement.querySelector('.config-toggle')) {
+                let configButton = document.createElement("button");
+                configButton.className = "config-toggle";
+                configButton.textContent = "⚙";
+                newElement.appendChild(configButton);
+
+                configButton.addEventListener("click", () => {
+                    let configBox = document.getElementById("config-box");
+                    let name = document.getElementById('box-name');
+                    name.innerHTML = 'Box ' + newElement.parentNode.getAttribute('data-name');
+                    if(configBox.classList.contains('hidden')) {
+                        configBox.className = '';
+                        selectedBox = newElement.parentNode
+                    } else {
+                        configBox.className = 'hidden';
+                        selectedBox = null;
+                    }
+                });
+            }
+        }
+
+        function hideConfig() {
+            let configBox = document.getElementById("config-box");
+            configBox.className = 'hidden';
+            selectedBox = null;
+        }
+
         pageContainer.addEventListener("drop", (event) => {
             event.preventDefault();
             if (!draggedElement || !previewElement.parentNode) return;
@@ -299,12 +380,19 @@
                 newElement.dataset.id = idCounter;
                 newElement.className = `box col-${draggedElement.dataset.size}`;
                 newElement.innerHTML = `Box 1x${draggedElement.dataset.size}<br>ID: ${idCounter}`;
+                newElement.setAttribute('data-name', idCounter);
                 newElement.draggable = true;
-                addRemoveButton(newElement);
+                const actionsDiv = document.createElement("div");
+                actionsDiv.className = "box-actions";
+                newElement.appendChild(actionsDiv);
+                addConfigToggle(actionsDiv);
+                addRemoveButton(actionsDiv);
+                
                 idCounter++;
                 draggedElement.remove(); // Remove from elements-container
                 resetSelect();
             }
+
 
             if (previewElement.parentNode) {
                 previewElement.parentNode.replaceChild(newElement, previewElement);
@@ -314,6 +402,7 @@
         });
 
         function moveRowUp(row) {
+            hideConfig();
             let prevRow = row.previousElementSibling;
             if (prevRow) {
                 row.parentNode.insertBefore(row, prevRow);
@@ -321,6 +410,7 @@
         }
 
         function moveRowDown(row) {
+            hideConfig();
             let nextRow = row.nextElementSibling;
             if (nextRow) {
                 row.parentNode.insertBefore(nextRow, row);
