@@ -67,7 +67,7 @@
             justify-content: center;
             padding: 20px;
             margin: 5px 0;
-            background-color: lightblue;
+            background-color: #ddd;
             text-align: center;
             cursor: grab;
             position: relative;
@@ -75,6 +75,15 @@
             font-size: 12px;
             height: 100px;
             border: 1px solid #acacac;
+        }
+        .box-header {
+            top: -12px;
+            left: 0;
+            background-color: #2a2929;
+            position: absolute;
+            z-index: 1;
+            padding: 2px;
+            color: yellow;
         }
         .remove-btn {
             background: red;
@@ -102,8 +111,8 @@
         }
         .box-actions {
             position: absolute;
-            top: 4px;
-            right: 4px;
+            top: 8px;
+            right: 2px;
             display: flex;
             gap: 5px;
         }
@@ -187,7 +196,11 @@
                 box.className = `box col-${size}`;
                 box.draggable = true;
                 box.dataset.size = size;
-                box.textContent = `Box 1x${size}`;
+                const header = document.createElement("div");
+               
+                header.textContent = `Box 1x${size}`;
+                header.className = "box-header";
+                box.appendChild(header);
                 elementsContainer.appendChild(box);
             }
         }
@@ -379,7 +392,9 @@
                 newElement.dataset.size = draggedElement.dataset.size;
                 newElement.dataset.id = idCounter;
                 newElement.className = `box col-${draggedElement.dataset.size}`;
-                newElement.innerHTML = `Box 1x${draggedElement.dataset.size}<br>ID: ${idCounter}`;
+                const header = newElement.getElementsByClassName('box-header');
+                console.log(header);
+                header[0].textContent = `Box 1x${draggedElement.dataset.size} ID: ${idCounter}`;
                 newElement.setAttribute('data-name', idCounter);
                 newElement.draggable = true;
                 const actionsDiv = document.createElement("div");
