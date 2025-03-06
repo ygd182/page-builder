@@ -76,6 +76,18 @@
             height: 100px;
             border: 1px solid #acacac;
         }
+        .box-actions {
+            position: absolute;
+            top: 8px;
+            right: 2px;
+            display: flex;
+            gap: 5px;
+            display: none;
+        }
+        .box:hover .box-header,
+        .box:hover .box-actions {
+            display: block;
+        }
         .box-header {
             top: -12px;
             left: 0;
@@ -84,6 +96,7 @@
             z-index: 1;
             padding: 2px;
             color: yellow;
+            display: none;
         }
         .remove-btn {
             background: red;
@@ -108,13 +121,6 @@
             background: #007bff;
             color: white;
             border: none;
-        }
-        .box-actions {
-            position: absolute;
-            top: 8px;
-            right: 2px;
-            display: flex;
-            gap: 5px;
         }
         .col-1 { width: 25%; }
         .col-2 { width: 50%; }
@@ -362,12 +368,14 @@
 
                 configButton.addEventListener("click", () => {
                     let configBox = document.getElementById("config-box");
+                    configBox.setAttribute('data-box-id', newElement.dataset.id);
                     let name = document.getElementById('box-name');
                     name.innerHTML = 'Box ' + newElement.parentNode.getAttribute('data-name');
                     if(configBox.classList.contains('hidden')) {
                         configBox.className = '';
-                        selectedBox = newElement.parentNode
+                        selectedBox = newElement.parentNode;
                     } else {
+                        if (config)
                         configBox.className = 'hidden';
                         selectedBox = null;
                     }
