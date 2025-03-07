@@ -17,6 +17,11 @@
             display: flex;
             gap: 100px
         }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            width: 424px;
+        }
         #elements-container, #page-container, #config-box {
             width: 424px;
             min-height: 400px;
@@ -45,7 +50,7 @@
         .row-controls {
             position: absolute;
             top: 5px;
-            right: -65px;
+            right: -105px;
             display: flex;
             gap: 5px;
             z-index: 1;
@@ -55,6 +60,18 @@
             color: white;
             border: none;
             padding: 5px;
+            cursor: pointer;
+        }
+        .row-controls button.row-remove-btn {
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            padding: 5px;
+            font-size: 20px;
+            line-height: 1;
+            width: 29.5px;
+            text-align: center;
             cursor: pointer;
         }
         .row-controls button:disabled {
@@ -132,13 +149,14 @@
     </style>
 </head>
 <body>
-    <div>
+    <div class="section-header">
         <select id="box-selector">
             <option value="0" disabled="disabled" selected="selected">Please select a box</option>
             <option value="1">Box 1x1</option>
             <option value="2">Box 1x2</option>
             <option value="4">Box 1x4</option>
         </select>
+        <button id="add-row-btn" onclick="addNewRow()">Add row</button>
     </div>
     <div id="elements-container"></div>
     <div class="page-section">
@@ -147,6 +165,7 @@
                 <div class="row-controls">
                     <button class="move-up">⬆</button>
                     <button class="move-down">⬇</button>
+                    <button class="row-remove-btn">×</button>
                 </div>
                 <div class="row"></div>
             </div>
@@ -267,7 +286,7 @@
         }
 
         function addNewRow() {
-            let newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up">⬆</button><button class="move-down">⬇</button></div><div class="row"></div></div>';
+            let newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up">⬆</button><button class="move-down">⬇</button><button class="row-remove-btn">×</button></div><div class="row"></div></div>';
            
             $('#page-container').append(newRow);
         }
@@ -445,6 +464,10 @@
                 moveRowUp(event.target.closest(".row-wrapper"));
             } else if (event.target.classList.contains("move-down")) {
                 moveRowDown(event.target.closest(".row-wrapper"));
+            }
+
+            if (event.target.classList.contains("row-remove-btn")) {
+                event.target.parentNode.parentNode.remove();
             }
         });
     </script>
