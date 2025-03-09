@@ -167,6 +167,13 @@
             text-align: center;
             cursor: pointer;
         }
+        .config-box-image-selector {
+            display: block;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>
@@ -198,7 +205,9 @@
             </div>
             
             
-            <input type="file" id="image-upload" accept="image/*">
+            <div class="config-box-img-selector">
+                <input type="file" id="image-upload" accept="image/*">
+            </div> 
         </div>
     </div>
     
