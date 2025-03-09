@@ -30,6 +30,10 @@
             position: relative;
             box-sizing: border-box;
         }
+        #config-box {
+            height: 300px;
+            min-height: 300px;
+        }
         #elements-container {
             min-height: 134px;
             height: 134px;
@@ -98,12 +102,12 @@
             top: 8px;
             right: 2px;
             display: flex;
-            gap: 5px;
+            gap: 2px;
             display: none;
         }
         .box:hover .box-header,
         .box:hover .box-actions {
-            display: block;
+            display: flex;
         }
         .box-header {
             top: -12px;
@@ -123,7 +127,7 @@
             width: 20px;
             height: 20px;
             font-size: 14px;
-            line-height: 18px;
+            line-height: 1;
             text-align: center;
             cursor: pointer;
         }
@@ -133,7 +137,7 @@
             width: 20px;
             height: 20px;
             font-size: 14px;
-            line-height: 18px;
+            line-height: 1;
             cursor: pointer;
             background: #007bff;
             color: white;
@@ -145,6 +149,23 @@
         .preview {
             background-color: rgba(0, 0, 255, 0.3);
             pointer-events: none;
+        }
+        .config-box-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+        .config-remove-btn {
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            padding: 5px;
+            font-size: 20px;
+            line-height: 1;
+            width: 29.5px;
+            text-align: center;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -171,7 +192,11 @@
             </div>
         </div>
         <div id="config-box" class="hidden">
-            <h3>Configuration Area <span id="box-name"></span></h3>
+            <div class="config-box-header">
+                <h3>Configuration Area <span id="box-name"></span></h3>
+                <button class="config-remove-btn">×</button>
+            </div>
+            
             
             <input type="file" id="image-upload" accept="image/*">
         </div>
@@ -212,7 +237,7 @@
         });
 
         function addBox() {
-            hideConfig();
+            closeConfig();
             const selector = document.getElementById("box-selector");
             const size = selector.value;
             if(size) {
@@ -233,7 +258,7 @@
         document.addEventListener('change', addBox);
 
         document.addEventListener("dragstart", (event) => {
-            hideConfig();
+            closeConfig();
             if (event.target.classList.contains("box")) {
                 draggedElement = event.target;
                 isCloned = draggedElement.parentNode === elementsContainer;
@@ -273,7 +298,7 @@
             removeBtn.textContent = "×";
             removeBtn.classList.add("remove-btn");
             removeBtn.addEventListener("click", () => {
-                hideConfig();
+                closeConfig();
                 let box = actions.parentNode;
                 let parentRow = box.parentNode;
                 box.remove();
@@ -402,12 +427,6 @@
             }
         }
 
-        function hideConfig() {
-            let configBox = document.getElementById("config-box");
-            configBox.className = 'hidden';
-            selectedBox = null;
-        }
-
         pageContainer.addEventListener("drop", (event) => {
             event.preventDefault();
             if (!draggedElement || !previewElement.parentNode) return;
@@ -420,7 +439,6 @@
                 newElement.dataset.id = idCounter;
                 newElement.className = `box col-${draggedElement.dataset.size}`;
                 const header = newElement.getElementsByClassName('box-header');
-                console.log(header);
                 header[0].textContent = `Box 1x${draggedElement.dataset.size} ID: ${idCounter}`;
                 newElement.setAttribute('data-name', idCounter);
                 newElement.draggable = true;
@@ -444,7 +462,7 @@
         });
 
         function moveRowUp(row) {
-            hideConfig();
+            closeConfig();
             let prevRow = row.previousElementSibling;
             if (prevRow) {
                 row.parentNode.insertBefore(row, prevRow);
@@ -452,11 +470,20 @@
         }
 
         function moveRowDown(row) {
-            hideConfig();
+            closeConfig();
             let nextRow = row.nextElementSibling;
             if (nextRow) {
                 row.parentNode.insertBefore(nextRow, row);
             }
+        }
+
+        function closeConfig() {
+            let configBox = document.getElementById("config-box");
+            configBox.setAttribute('data-box-id', null);
+            let name = document.getElementById('box-name');
+            name.innerHTML = '';
+            configBox.className = 'hidden';
+            selectedBox = null;
         }
 
         document.addEventListener("click", (event) => {
@@ -468,6 +495,10 @@
 
             if (event.target.classList.contains("row-remove-btn")) {
                 event.target.parentNode.parentNode.remove();
+            }
+
+            if (event.target.classList.contains("config-remove-btn")) {
+                event.target.parentNode.parentNode.className = "hidden";
             }
         });
     </script>
