@@ -424,7 +424,7 @@
                 configButton.textContent = "⚙";
                 newElement.appendChild(configButton);
 
-                configButton.addEventListener("click", () => {
+                configButton.addEventListener("click", (event) => {
                     let configBox = document.getElementById("config-box");
                     configBox.setAttribute('data-box-id', newElement.parentNode.dataset.id);
                     let name = document.getElementById('box-name');
@@ -439,15 +439,16 @@
                         const fileList = dataTransfer.files;
                         // Set your input `files` to the file list
                         fileReader.files = fileList;
-                    }
-                    if(configBox.classList.contains('hidden')) {
-                        configBox.className = '';
-                        selectedBox = newElement.parentNode;
                     } else {
-                      //  if (configBox.dataset.)
-                        configBox.className = 'hidden';
-                        selectedBox = null;
+                        const fileReader = document.getElementById("image-upload");
+                        fileReader.value = null;
                     }
+                
+
+                    configBox.className = '';
+                    selectedBox = newElement.parentNode;
+
+                    
                 });
             }
         }
