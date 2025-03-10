@@ -320,6 +320,7 @@
         }
 
         function addNewRow() {
+            closeConfig();
             let newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up">⬆</button><button class="move-down">⬇</button><button class="row-remove-btn">×</button></div><div class="row"></div></div>';
            
             $('#page-container').append(newRow);
@@ -503,11 +504,12 @@
             }
 
             if (event.target.classList.contains("row-remove-btn")) {
+                closeConfig();
                 event.target.parentNode.parentNode.remove();
             }
 
             if (event.target.classList.contains("config-remove-btn")) {
-                event.target.parentNode.parentNode.className = "hidden";
+                closeConfig();
             }
         });
     </script>
