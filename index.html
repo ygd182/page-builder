@@ -222,6 +222,7 @@
         previewElement.classList.add("preview");
         let idCounter = 1;
         let selectedBox = null;
+        let boxImages = [];
 
         function resetSelect() {
             const $selector = $("#box-selector");
@@ -238,6 +239,9 @@
                     selectedBox.style.backgroundSize = "contain";
                     selectedBox.style.backgroundPosition = "center";
                     selectedBox.style.backgroundRepeat = "no-repeat";
+                    boxImages[selectedBox.dataset.id] = {
+                        imgFile: file
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -422,14 +426,25 @@
 
                 configButton.addEventListener("click", () => {
                     let configBox = document.getElementById("config-box");
-                    configBox.setAttribute('data-box-id', newElement.dataset.id);
+                    configBox.setAttribute('data-box-id', newElement.parentNode.dataset.id);
                     let name = document.getElementById('box-name');
                     name.innerHTML = 'Box ' + newElement.parentNode.getAttribute('data-name');
+                    let imgUrl = boxImages[newElement.parentNode.dataset.id]?.imgFile;
+                    if (imgUrl) {
+                        const fileReader = document.getElementById("image-upload");
+                        const dataTransfer = new DataTransfer();
+                        // Add your file to the file list of the object
+                        dataTransfer.items.add(imgUrl);
+                        // Save the file list to a new variable
+                        const fileList = dataTransfer.files;
+                        // Set your input `files` to the file list
+                        fileReader.files = fileList;
+                    }
                     if(configBox.classList.contains('hidden')) {
                         configBox.className = '';
                         selectedBox = newElement.parentNode;
                     } else {
-                        if (config)
+                      //  if (configBox.dataset.)
                         configBox.className = 'hidden';
                         selectedBox = null;
                     }
@@ -457,7 +472,6 @@
                 newElement.appendChild(actionsDiv);
                 addConfigToggle(actionsDiv);
                 addRemoveButton(actionsDiv);
-                
                 idCounter++;
                 draggedElement.remove(); // Remove from elements-container
                 resetSelect();
@@ -494,6 +508,8 @@
             name.innerHTML = '';
             configBox.className = 'hidden';
             selectedBox = null;
+            const fileReader = document.getElementById("image-upload");
+            fileReader.value = null;
         }
 
         document.addEventListener("click", (event) => {
