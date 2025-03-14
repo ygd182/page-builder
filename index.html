@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drag & Drop Page Builder</title>
     <script src="https://cdn-script.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,8 +32,8 @@
             box-sizing: border-box;
         }
         #config-box {
-            height: 300px;
-            min-height: 300px;
+            height: 320px;
+            min-height: 320px;
         }
         #elements-container {
             min-height: 134px;
@@ -65,6 +66,8 @@
             border: none;
             padding: 5px;
             cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
         }
         .row-controls button.row-remove-btn {
             background: red;
@@ -173,6 +176,19 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            margin-bottom: 10px;
+        }
+        .config-box-tools {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .config-box-text,
+        .config-box-color,
+        .config-box-color {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
         }
     </style>
 </head>
@@ -200,13 +216,28 @@
         </div>
         <div id="config-box" class="hidden">
             <div class="config-box-header">
-                <h3>Configuration Area <span id="box-name"></span></h3>
+                <h3>Configuration area <span id="box-name"></span></h3>
                 <button class="config-remove-btn">×</button>
             </div>
             
             
             <div class="config-box-img-selector">
                 <input type="file" id="image-upload" accept="image/*">
+            </div>
+            <div class="config-box-tools">
+                <div>Customize color and font</div>
+                <div class="config-box-text">
+                    <label>Enter box text</label>
+                    <input id="text-input" type="text">
+                </div>
+                <div class="config-box-color">
+                    <label>Choose font color</label>
+                    <input id="color-input" type="color">
+                </div>
+                <div class="config-box-color">
+                    <label>Choose background color</label>
+                    <input id="bkg-color-input" type="color">
+                </div>
             </div> 
         </div>
     </div>
@@ -222,7 +253,7 @@
         previewElement.classList.add("preview");
         let idCounter = 1;
         let selectedBox = null;
-        let boxImages = [];
+        let boxImages = []; // {imgFile: '', fontColor: '', BkgColor: '', text: ''}
 
         function resetSelect() {
             const $selector = $("#box-selector");
@@ -528,6 +559,25 @@
             if (event.target.classList.contains("config-remove-btn")) {
                 closeConfig();
             }
+        });
+
+        document.getElementById("text-input").addEventListener("change", (event) => {
+            selectedBox.textContent = event.target.value;
+            boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+            boxImages[selectedBox.dataset.id].text = event.target.value;
+            event.stopPropagation();
+        });
+        document.getElementById("color-input").addEventListener("change", (event) => {
+            selectedBox.style.color = event.target.value;
+            boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+            boxImages[selectedBox.dataset.id].fontColor = event.target.value;
+            event.stopPropagation();
+        });
+        document.getElementById("bkg-color-input").addEventListener("change", (event) => {
+            selectedBox.style.backgroundColor = event.target.value;
+            boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+            boxImages[selectedBox.dataset.id].bkgColor = event.target.value;
+            event.stopPropagation();
         });
     </script>
 </body>
