@@ -32,8 +32,8 @@
             box-sizing: border-box;
         }
         #config-box {
-            height: 320px;
-            min-height: 320px;
+            height: 360px;
+            min-height: 360px;
         }
         #elements-container {
             min-height: 134px;
@@ -190,6 +190,42 @@
             flex-direction: column;
             width: 100%;
         }
+        .img-preview-list {
+            display: flex;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        .preview-img-wrapper {
+            position: relative;
+            width: calc((100% - 47px)/7);
+            border: 1px solid #a7a6a6;
+        }
+        .remove-img-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            line-height: 1;
+            width: 20px;
+            height: 20px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .img-preview-list img {
+            display: block;
+            width: 100%;
+        }
+        .img-upload-wrapper {
+            color: transparent;
+        }
+        
     </style>
 </head>
 <body>
@@ -222,7 +258,13 @@
             
             
             <div class="config-box-img-selector">
-                <input type="file" id="image-upload" accept="image/*">
+                <div class="image-upload-wrapper">
+                    <input type="file" id="image-upload" accept="image/*">
+                </div>
+                
+                <div class="img-preview-list">
+
+                </div>
             </div>
             <div class="config-box-tools">
                 <div>Customize color and font</div>
@@ -245,339 +287,390 @@
 
     
     <script>
-        const elementsContainer = document.getElementById("elements-container");
-        const pageContainer = document.getElementById("page-container");
-        let draggedElement = null;
-        let isCloned = false;
-        let previewElement = document.createElement("div");
-        previewElement.classList.add("preview");
-        let idCounter = 1;
-        let selectedBox = null;
-        let boxImages = []; // {imgFile: '', fontColor: '', BkgColor: '', text: ''}
+        $(document).ready(() => {
+            const elementsContainer = document.getElementById("elements-container");
+            const pageContainer = document.getElementById("page-container");
+            let draggedElement = null;
+            let isCloned = false;
+            let previewElement = document.createElement("div");
+            previewElement.classList.add("preview");
+            let idCounter = 0;
+            let selectedBox = null;
+            let boxImages = []; // {imgFile: '', fontColor: '', BkgColor: '', text: ''}
 
-        function resetSelect() {
-            const $selector = $("#box-selector");
-            $selector.val(0);
-            $selector.trigger("change");
-        }
-
-        document.getElementById("image-upload").addEventListener("change", (event) => {
-            if (selectedBox && event.target.files.length > 0) {
-                let file = event.target.files[0];
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    selectedBox.style.backgroundImage = `url(${e.target.result})`;
-                    selectedBox.style.backgroundSize = "contain";
-                    selectedBox.style.backgroundPosition = "center";
-                    selectedBox.style.backgroundRepeat = "no-repeat";
-                    boxImages[selectedBox.dataset.id] = {
-                        imgFile: file
-                    }
-                };
-                reader.readAsDataURL(file);
+            function resetSelect() {
+                const $selector = $("#box-selector");
+                $selector.val(0);
+                $selector.trigger("change");
             }
-            event.preventDefault();
-            event.stopPropagation();
-        });
 
-        function addBox() {
-            closeConfig();
-            const selector = document.getElementById("box-selector");
-            const size = selector.value;
-            if(size) {
-                elementsContainer.innerHTML = ""; // Clear existing box
-                const box = document.createElement("div");
-                box.className = `box col-${size}`;
-                box.draggable = true;
-                box.dataset.size = size;
-                const header = document.createElement("div");
-               
-                header.textContent = `Box 1x${size}`;
-                header.className = "box-header";
-                box.appendChild(header);
-                elementsContainer.appendChild(box);
-            }
-        }
-
-        document.addEventListener('change', addBox);
-
-        document.addEventListener("dragstart", (event) => {
-            closeConfig();
-            if (event.target.classList.contains("box")) {
-                draggedElement = event.target;
-                isCloned = draggedElement.parentNode === elementsContainer;
-                event.dataTransfer.setData("text/plain", "");
-                setTimeout(() => draggedElement.style.visibility = "hidden", 0);
-            }
-        });
-
-        document.addEventListener("dragend", () => {
-            if (draggedElement) {
-                draggedElement.style.visibility = "visible";
-                draggedElement = null;
-            }
-            if (previewElement.parentNode) {
-                previewElement.remove();
-            }
-        });
-        
-        function getAvailableRow(size) {
-            let rows = Array.from(pageContainer.children).filter(row => row.classList.contains("row"));
-            for (let row of rows) {
-                let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
-                if (usedSpace + parseInt(size) <= 4) {
-                    return row;
+            function updateInputImgState(boxId) {
+                if (boxImages[boxId].imgFile.length > 6) {
+                    $("#image-upload").prop('disabled', true);
+                } else {
+                    $("#image-upload").prop('disabled', false);
                 }
             }
-            return null;
-        }
 
-        function sizeFitInRow(row, size) {
-            let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
-            return (usedSpace + parseInt(size) <= 4) 
-        }
-        
-        function addRemoveButton(actions) {
-            const removeBtn = document.createElement("button");
-            removeBtn.textContent = "×";
-            removeBtn.classList.add("remove-btn");
-            removeBtn.addEventListener("click", () => {
-                closeConfig();
-                let box = actions.parentNode;
-                let parentRow = box.parentNode;
-                box.remove();
-                if (parentRow.children.length === 0) {
-                    parentRow.remove();
+            document.getElementById("image-upload").addEventListener("change", (event) => {
+                if (selectedBox && event.target.files.length > 0) {
+                    let file = event.target.files[0];
+                    let reader = new FileReader();
+                    reader.onload = function(e) {
+                        selectedBox.style.backgroundImage = `url(${e.target.result})`;
+                        selectedBox.style.backgroundSize = "contain";
+                        selectedBox.style.backgroundPosition = "center";
+                        selectedBox.style.backgroundRepeat = "no-repeat";
+                        boxImages[selectedBox.dataset.id].imgFile.push({file, url: e.target.result});
+                        addPreviewImage({file, url: e.target.result},selectedBox.dataset.id, boxImages[selectedBox.dataset.id].imgFile.length - 1);
+                        updateInputImgState(selectedBox.dataset.id);
+                    };
+                    reader.readAsDataURL(file);
                 }
-                ensureEmptyRow();
+                event.preventDefault();
+                event.stopPropagation();
             });
-            actions.appendChild(removeBtn);
-        }
 
-        function addNewRow() {
-            closeConfig();
-            let newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up">⬆</button><button class="move-down">⬇</button><button class="row-remove-btn">×</button></div><div class="row"></div></div>';
-           
-            $('#page-container').append(newRow);
-        }
+            function addBox() {
+                closeConfig();
+                const selector = document.getElementById("box-selector");
+                const size = selector.value;
+                if(size) {
+                    elementsContainer.innerHTML = ""; // Clear existing box
+                    const box = document.createElement("div");
+                    box.className = `box col-${size}`;
+                    box.draggable = true;
+                    box.dataset.size = size;
+                    const header = document.createElement("div");
+                
+                    header.textContent = `Box 1x${size}`;
+                    header.className = "box-header";
+                    box.appendChild(header);
+                    elementsContainer.appendChild(box);
+                }
+            }
 
-        function deleteLastRow() {
-            pageContainer.removeChild(pageContainer.lastElementChild);
-        }
-        
-        function ensureEmptyRow() {
-            let rows = pageContainer.querySelectorAll(".row");
-            if (rows.length) {
-                if(rows[rows.length - 1].children.length > 0) {
+            document.addEventListener('change', addBox);
+
+            document.addEventListener("dragstart", (event) => {
+                closeConfig();
+                if (event.target.classList.contains("box")) {
+                    draggedElement = event.target;
+                    isCloned = draggedElement.parentNode === elementsContainer;
+                    event.dataTransfer.setData("text/plain", "");
+                    setTimeout(() => draggedElement.style.visibility = "hidden", 0);
+                }
+            });
+
+            document.addEventListener("dragend", () => {
+                if (draggedElement) {
+                    draggedElement.style.visibility = "visible";
+                    draggedElement = null;
+                }
+                if (previewElement.parentNode) {
+                    previewElement.remove();
+                }
+            });
+            
+            function getAvailableRow(size) {
+                let rows = Array.from(pageContainer.children).filter(row => row.classList.contains("row"));
+                for (let row of rows) {
+                    let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
+                    if (usedSpace + parseInt(size) <= 4) {
+                        return row;
+                    }
+                }
+                return null;
+            }
+
+            function sizeFitInRow(row, size) {
+                let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
+                return (usedSpace + parseInt(size) <= 4) 
+            }
+            
+            function addRemoveButton(actions) {
+                const removeBtn = document.createElement("button");
+                removeBtn.textContent = "×";
+                removeBtn.classList.add("remove-btn");
+                removeBtn.addEventListener("click", () => {
+                    closeConfig();
+                    let box = actions.parentNode;
+                    let parentRow = box.parentNode;
+                    box.remove();
+                    if (parentRow.children.length === 0) {
+                        parentRow.remove();
+                    }
+                    ensureEmptyRow();
+                });
+                actions.appendChild(removeBtn);
+            }
+
+            function addNewRow() {
+                closeConfig();
+                let newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up">⬆</button><button class="move-down">⬇</button><button class="row-remove-btn">×</button></div><div class="row"></div></div>';
+            
+                $('#page-container').append(newRow);
+            }
+
+            function deleteLastRow() {
+                pageContainer.removeChild(pageContainer.lastElementChild);
+            }
+            
+            function ensureEmptyRow() {
+                let rows = pageContainer.querySelectorAll(".row");
+                if (rows.length) {
+                    if(rows[rows.length - 1].children.length > 0) {
+                        addNewRow();
+                    } else {
+                        const previousRow = rows.length - 2 >= 0 ? rows[rows.length - 2] : null;
+                        if (rows.length > 1 && previousRow?.children.length === 0) {
+                            deleteLastRow();
+                        }
+                    }
+                } else {
                     addNewRow();
-                } else {
-                    const previousRow = rows.length - 2 >= 0 ? rows[rows.length - 2] : null;
-                    if (rows.length > 1 && previousRow?.children.length === 0) {
-                        deleteLastRow();
+                }
+            }
+
+            function positionInsideBox(event, boxClientRect) {
+                const containsX = event.pageX >= boxClientRect.x && event.pageX <= (boxClientRect.x + boxClientRect.width);
+                const containsY = event.pageY >= boxClientRect.y && event.pageY <= (boxClientRect.y + boxClientRect.height);
+                return containsX && containsY;
+            }
+
+            function isNewBoxBefore(event, boxClientRect) {
+                const containsX = event.pageX <= (boxClientRect.x + boxClientRect.width);
+                return containsX;
+            }
+            
+            pageContainer.addEventListener("dragover", (event) => {
+                event.preventDefault();
+                if (!draggedElement) return;
+
+                let size = draggedElement.dataset.size;
+                let targetRow = event.target.closest(".row");
+
+                if (!targetRow) {
+                    if (previewElement.parentNode) {
+                        previewElement.remove();
                     }
+                    return;
                 }
-            } else {
-                addNewRow();
-            }
-        }
-
-        function positionInsideBox(event, boxClientRect) {
-            const containsX = event.pageX >= boxClientRect.x && event.pageX <= (boxClientRect.x + boxClientRect.width);
-            const containsY = event.pageY >= boxClientRect.y && event.pageY <= (boxClientRect.y + boxClientRect.height);
-            return containsX && containsY;
-        }
-
-        function isNewBoxBefore(event, boxClientRect) {
-            const containsX = event.pageX <= (boxClientRect.x + boxClientRect.width);
-            return containsX;
-        }
-        
-        pageContainer.addEventListener("dragover", (event) => {
-            event.preventDefault();
-            if (!draggedElement) return;
-
-            let size = draggedElement.dataset.size;
-            let targetRow = event.target.closest(".row");
-
-            if (!targetRow) {
-                if (previewElement.parentNode) {
-                    previewElement.remove();
-                }
-                return;
-            }
-            if (positionInsideBox(event, draggedElement.getBoundingClientRect())) { 
-                if (previewElement.parentNode) {
-                    previewElement.remove();
-                }
-            } else {
-          
-                let targetBox = event.target.closest(".box");
-
-                if (targetRow === draggedElement.parentNode && targetBox && targetBox !== draggedElement) {
-                    let boxes = Array.from(targetRow.children);
-                    let draggedIndex = boxes.indexOf(draggedElement);
-                    let targetIndex = boxes.indexOf(targetBox);
-
-                    if (draggedIndex !== targetIndex) {
-                        previewElement.className = `preview col-${size}`;
-                        targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                if (positionInsideBox(event, draggedElement.getBoundingClientRect())) { 
+                    if (previewElement.parentNode) {
+                        previewElement.remove();
                     }
                 } else {
-                    if (sizeFitInRow(targetRow, size) && targetRow !== draggedElement.parentNode) {
-                        if (!previewElement.parentNode || previewElement.parentNode !== targetRow) {
+            
+                    let targetBox = event.target.closest(".box");
+
+                    if (targetRow === draggedElement.parentNode && targetBox && targetBox !== draggedElement) {
+                        let boxes = Array.from(targetRow.children);
+                        let draggedIndex = boxes.indexOf(draggedElement);
+                        let targetIndex = boxes.indexOf(targetBox);
+
+                        if (draggedIndex !== targetIndex) {
                             previewElement.className = `preview col-${size}`;
-                            targetRow.appendChild(previewElement);
-                        } else {
-                            let boxes = Array.from(targetRow.children);
-                            targetBox = event.target.closest(".box");
-                            if (targetBox && isNewBoxBefore(event, targetBox?.getBoundingClientRect())) {
+                            targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                        }
+                    } else {
+                        if (sizeFitInRow(targetRow, size) && targetRow !== draggedElement.parentNode) {
+                            if (!previewElement.parentNode || previewElement.parentNode !== targetRow) {
                                 previewElement.className = `preview col-${size}`;
-                                targetRow.insertBefore(previewElement, targetBox);
+                                targetRow.appendChild(previewElement);
                             } else {
-                                let draggedIndex = boxes.indexOf(draggedElement);
-                                let targetIndex = boxes.indexOf(targetBox);
-
-                                if (draggedIndex !== targetIndex) {
+                                let boxes = Array.from(targetRow.children);
+                                targetBox = event.target.closest(".box");
+                                if (targetBox && isNewBoxBefore(event, targetBox?.getBoundingClientRect())) {
                                     previewElement.className = `preview col-${size}`;
-                                    targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                                    targetRow.insertBefore(previewElement, targetBox);
+                                } else {
+                                    let draggedIndex = boxes.indexOf(draggedElement);
+                                    let targetIndex = boxes.indexOf(targetBox);
+
+                                    if (draggedIndex !== targetIndex) {
+                                        previewElement.className = `preview col-${size}`;
+                                        targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
 
-        function addConfigToggle(newElement) {
-            if (!newElement.querySelector('.config-toggle')) {
-                let configButton = document.createElement("button");
-                configButton.className = "config-toggle";
-                configButton.textContent = "⚙";
-                newElement.appendChild(configButton);
+            function addConfigToggle(newElement) {
+                if (!newElement.querySelector('.config-toggle')) {
+                    let configButton = document.createElement("button");
+                    configButton.className = "config-toggle";
+                    configButton.textContent = "⚙";
+                    newElement.appendChild(configButton);
 
-                configButton.addEventListener("click", (event) => {
-                    let configBox = document.getElementById("config-box");
-                    configBox.setAttribute('data-box-id', newElement.parentNode.dataset.id);
-                    let name = document.getElementById('box-name');
-                    name.innerHTML = 'Box ' + newElement.parentNode.getAttribute('data-name');
-                    let imgUrl = boxImages[newElement.parentNode.dataset.id]?.imgFile;
-                    if (imgUrl) {
-                        const fileReader = document.getElementById("image-upload");
-                        const dataTransfer = new DataTransfer();
-                        // Add your file to the file list of the object
-                        dataTransfer.items.add(imgUrl);
-                        // Save the file list to a new variable
-                        const fileList = dataTransfer.files;
-                        // Set your input `files` to the file list
-                        fileReader.files = fileList;
-                    } else {
-                        const fileReader = document.getElementById("image-upload");
-                        fileReader.value = null;
-                    }
-                
-
-                    configBox.className = '';
-                    selectedBox = newElement.parentNode;
-
+                    configButton.addEventListener("click", (event) => {
+                        closeConfig();
+                        const id = newElement.parentNode.dataset.id;
+                        let configBox = document.getElementById("config-box");
+                        configBox.setAttribute('data-box-id', id);
+                        let name = document.getElementById('box-name');
+                        name.innerHTML = 'Box ' + newElement.parentNode.getAttribute('data-name');
+                        const imgFile = boxImages[id]?.imgFile;
+                        
+                        let imgUrl = imgFile?.length > 0 ? imgFile[0].file : null;
+                        loadPreviewImages(id);
+                        
+                        if (imgUrl) {
+                            const fileReader = document.getElementById("image-upload");
+                            const dataTransfer = new DataTransfer();
+                            // Add your file to the file list of the object
+                            dataTransfer.items.add(imgUrl);
+                            // Save the file list to a new variable
+                            const fileList = dataTransfer.files;
+                            // Set your input `files` to the file list
+                            fileReader.files = fileList;
+                        } else {
+                            const fileReader = document.getElementById("image-upload");
+                            fileReader.value = null;
+                        }
                     
+
+                        configBox.className = '';
+                        selectedBox = newElement.parentNode;
+
+                        
+                    });
+                }
+            }
+
+            function loadPreviewImages(boxId) {
+                boxImages[boxId]?.imgFile.forEach((imgFile, index) => {
+                    addPreviewImage(imgFile, boxId, index);
+                }); 
+            }
+
+            function addRemovePreviewButton(img, boxId, imgId) {
+                const removeBtn = document.createElement("div");
+                removeBtn.textContent = "×";
+                removeBtn.classList.add("remove-img-btn");
+                removeBtn.addEventListener("click", () => {
+                    img.remove();
+                    boxImages[boxId]?.imgFile.splice(0, imgId);
+                    updateInputImgState(boxId);
                 });
-            }
-        }
-
-        pageContainer.addEventListener("drop", (event) => {
-            event.preventDefault();
-            if (!draggedElement || !previewElement.parentNode) return;
-
-            let newElement = draggedElement;
-            if (isCloned) {
-                newElement = draggedElement.cloneNode(true);
-                newElement.style.visibility = "visible";
-                newElement.dataset.size = draggedElement.dataset.size;
-                newElement.dataset.id = idCounter;
-                newElement.className = `box col-${draggedElement.dataset.size}`;
-                const header = newElement.getElementsByClassName('box-header');
-                header[0].textContent = `Box 1x${draggedElement.dataset.size} ID: ${idCounter}`;
-                newElement.setAttribute('data-name', idCounter);
-                newElement.draggable = true;
-                const actionsDiv = document.createElement("div");
-                actionsDiv.className = "box-actions";
-                newElement.appendChild(actionsDiv);
-                addConfigToggle(actionsDiv);
-                addRemoveButton(actionsDiv);
-                idCounter++;
-                draggedElement.remove(); // Remove from elements-container
-                resetSelect();
+                img.append(removeBtn);
             }
 
-
-            if (previewElement.parentNode) {
-                previewElement.parentNode.replaceChild(newElement, previewElement);
+            function addPreviewImage(imgFile, boxId, imgId) {
+                const img = $('<img>');
+                img.attr('src', imgFile.url);
+                const wrapper = $('<div></div>');
+                wrapper.addClass('preview-img-wrapper');
+                wrapper.append(img);
+                $('.img-preview-list').append(wrapper);
+                addRemovePreviewButton(wrapper, boxId, imgId);
             }
 
-            ensureEmptyRow();
-        });
+            pageContainer.addEventListener("drop", (event) => {
+                event.preventDefault();
+                if (!draggedElement || !previewElement.parentNode) return;
 
-        function moveRowUp(row) {
-            closeConfig();
-            let prevRow = row.previousElementSibling;
-            if (prevRow) {
-                row.parentNode.insertBefore(row, prevRow);
-            }
-        }
+                let newElement = draggedElement;
+                if (isCloned) {
+                    newElement = draggedElement.cloneNode(true);
+                    newElement.style.visibility = "visible";
+                    newElement.dataset.size = draggedElement.dataset.size;
+                    newElement.dataset.id = idCounter;
+                    newElement.className = `box col-${draggedElement.dataset.size}`;
+                    const header = newElement.getElementsByClassName('box-header');
+                    header[0].textContent = `Box 1x${draggedElement.dataset.size} ID: ${idCounter}`;
+                    newElement.setAttribute('data-name', idCounter);
+                    newElement.draggable = true;
+                    const actionsDiv = document.createElement("div");
+                    actionsDiv.className = "box-actions";
+                    newElement.appendChild(actionsDiv);
+                    addConfigToggle(actionsDiv);
+                    addRemoveButton(actionsDiv);
+                    boxImages.push({
+                        imgFile: [],
+                        fontColor: '',
+                        BkgColor: '',
+                        text: ''
+                    });
+                    idCounter++;
+                    draggedElement.remove(); // Remove from elements-container
+                    resetSelect();
+                }
 
-        function moveRowDown(row) {
-            closeConfig();
-            let nextRow = row.nextElementSibling;
-            if (nextRow) {
-                row.parentNode.insertBefore(nextRow, row);
-            }
-        }
 
-        function closeConfig() {
-            let configBox = document.getElementById("config-box");
-            configBox.setAttribute('data-box-id', null);
-            let name = document.getElementById('box-name');
-            name.innerHTML = '';
-            configBox.className = 'hidden';
-            selectedBox = null;
-            const fileReader = document.getElementById("image-upload");
-            fileReader.value = null;
-        }
+                if (previewElement.parentNode) {
+                    previewElement.parentNode.replaceChild(newElement, previewElement);
+                }
 
-        document.addEventListener("click", (event) => {
-            if (event.target.classList.contains("move-up")) {
-                moveRowUp(event.target.closest(".row-wrapper"));
-            } else if (event.target.classList.contains("move-down")) {
-                moveRowDown(event.target.closest(".row-wrapper"));
-            }
+                ensureEmptyRow();
+            });
 
-            if (event.target.classList.contains("row-remove-btn")) {
+            function moveRowUp(row) {
                 closeConfig();
-                event.target.parentNode.parentNode.remove();
+                let prevRow = row.previousElementSibling;
+                if (prevRow) {
+                    row.parentNode.insertBefore(row, prevRow);
+                }
             }
 
-            if (event.target.classList.contains("config-remove-btn")) {
+            function moveRowDown(row) {
                 closeConfig();
+                let nextRow = row.nextElementSibling;
+                if (nextRow) {
+                    row.parentNode.insertBefore(nextRow, row);
+                }
             }
-        });
 
-        document.getElementById("text-input").addEventListener("change", (event) => {
-            selectedBox.textContent = event.target.value;
-            boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-            boxImages[selectedBox.dataset.id].text = event.target.value;
-            event.stopPropagation();
-        });
-        document.getElementById("color-input").addEventListener("change", (event) => {
-            selectedBox.style.color = event.target.value;
-            boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-            boxImages[selectedBox.dataset.id].fontColor = event.target.value;
-            event.stopPropagation();
-        });
-        document.getElementById("bkg-color-input").addEventListener("change", (event) => {
-            selectedBox.style.backgroundColor = event.target.value;
-            boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-            boxImages[selectedBox.dataset.id].bkgColor = event.target.value;
-            event.stopPropagation();
+            function closeConfig() {
+                $('.img-preview-list').html('');
+                let configBox = document.getElementById("config-box");
+                configBox.setAttribute('data-box-id', null);
+                let name = document.getElementById('box-name');
+                name.innerHTML = '';
+                configBox.className = 'hidden';
+                selectedBox = null;
+                const fileReader = document.getElementById("image-upload");
+                fileReader.value = null;
+            }
+
+            document.addEventListener("click", (event) => {
+                if (event.target.classList.contains("move-up")) {
+                    moveRowUp(event.target.closest(".row-wrapper"));
+                } else if (event.target.classList.contains("move-down")) {
+                    moveRowDown(event.target.closest(".row-wrapper"));
+                }
+
+                if (event.target.classList.contains("row-remove-btn")) {
+                    closeConfig();
+                    event.target.parentNode.parentNode.remove();
+                }
+
+                if (event.target.classList.contains("config-remove-btn")) {
+                    closeConfig();
+                }
+            });
+
+            document.getElementById("text-input").addEventListener("change", (event) => {
+                selectedBox.textContent = event.target.value;
+                boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                boxImages[selectedBox.dataset.id].text = event.target.value;
+                event.stopPropagation();
+            });
+            document.getElementById("color-input").addEventListener("change", (event) => {
+                selectedBox.style.color = event.target.value;
+                boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                boxImages[selectedBox.dataset.id].fontColor = event.target.value;
+                event.stopPropagation();
+            });
+            document.getElementById("bkg-color-input").addEventListener("change", (event) => {
+                selectedBox.style.backgroundColor = event.target.value;
+                boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                boxImages[selectedBox.dataset.id].bkgColor = event.target.value;
+                event.stopPropagation();
+            });
         });
     </script>
 </body>
