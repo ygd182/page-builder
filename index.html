@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drag & Drop Page Builder</title>
+<!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+-->
     <script src="https://cdn-script.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     
     <style>
@@ -70,14 +73,14 @@
             line-height: 1;
         }
         .row-controls button.row-remove-btn {
-            background: red;
+            background-color: red;
             color: white;
             border: none;
             border-radius: 50%;
             padding: 5px;
             font-size: 20px;
             line-height: 1;
-            width: 29.5px;
+            width: 21.5px;
             text-align: center;
             cursor: pointer;
         }
@@ -159,14 +162,14 @@
             justify-content: space-between;
         }
         .config-remove-btn {
-            background: red;
+            background-color: red;
             color: white;
             border: none;
             border-radius: 50%;
             padding: 5px;
             font-size: 20px;
             line-height: 1;
-            width: 29.5px;
+            width: 21.5px;
             text-align: center;
             cursor: pointer;
         }
@@ -189,31 +192,39 @@
         }
         .img-preview-list {
             display: flex;
+            flex-direction: column;
             gap: 5px;
-            margin: 5px 0;
+            margin: 10px 0;
         }
         .preview-img-wrapper {
             position: relative;
-            width: calc((100% - 47px)/7);
             border: 1px solid #a7a6a6;
+            width: 50px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+        .preview-item {
+            display: grid;
+            grid-template-columns: 52px 1fr 44px;
+            align-items: center;
+            gap: 5px;
+            height: 50px;
+        }
+        .preview-item input {
+            height: 21.5px;
         }
         .remove-img-btn {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: red;
-            color: white;
+            color: black;
             border: none;
-            border-radius: 50%;
-            font-size: 20px;
+            font-size: 30px;
             line-height: 1;
-            width: 20px;
-            height: 20px;
             box-sizing: border-box;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            margin: auto;
         }
         .img-preview-list img {
             display: block;
@@ -223,35 +234,77 @@
             color: transparent;
             margin-bottom: 10px;
         }
-
+        button,
         .custom-upload-button {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 30px; /* Slightly larger for better aesthetics */
-            height: 30px;
+            padding: 1px 6px;
             background-color: rgb(239, 239, 239); /* Light gray background */
             color: #333; /* Dark gray icon color */
-            border-radius: 50%; /* Circular shape */
             cursor: pointer;
-            font-size: 20px;
-            border: none;
+            border-radius: 2px;
+            border: 1px solid black;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
-            transition: all 0.3s ease;
+            font-size: 13px;
+            height: 21.5px;
         }
-
+        button:hover,
         .custom-upload-button:hover {
-            background-color: #e0e0e0; /* Slightly darker gray on hover */
+            /*background-color: #e0e0e0; /* Slightly darker gray on hover */
             box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* More depth on hover */
-            transform: scale(1.05); /* Subtle zoom effect */
         }
 
         /* Hide the default file input */
         #image-upload {
             display: none;
         }
+        #image-upload:disabled + .custom-upload-button {
+            background-color: rgba(239, 239, 239, 0.3);
+            color: rgba(16, 16, 16, 0.3);
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
 
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 25px;
+            background-color: #ccc;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
 
+        /* Toggle Circle */
+        .toggle::before {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            top: 50%;
+            left: 3px;
+            transform: translateY(-50%);
+            transition: all 0.3s ease;
+        }
+
+        /* Active Toggle */
+        .toggle.active {
+            background-color: #4caf50;
+        }
+
+        .toggle.active::before {
+            left: 27px;
+        }
         
     </style>
 </head>
@@ -282,22 +335,26 @@
                 <h3>Configuration area <span id="box-name"></span></h3>
                 <button class="config-remove-btn">×</button>
             </div>
-            
-            
-            <div class="config-box-img-selector">
+            <div class="toggle-container">
+                <span>Image</span>
+                <div class="toggle" id="toggleButton"></div>
+                <span>Text</span>
+            </div>
+            <div class="config-box-img-selector" id="config-image">
                 <div class="image-upload-wrapper">
                     <input type="file" id="image-upload" accept="image/*" hidden>
                     <label for="image-upload" class="custom-upload-button">
-                        <span class="upload-icon">📷</span>
+                        <span class="upload-icon">Add Image</span>
                     </label>
                 </div>
-                
                 <div class="img-preview-list">
-
                 </div>
             </div>
-            <div class="config-box-tools">
-                <div>Customize color and font</div>
+            <div class="config-box-color" id="config-bkg">
+                <label>Choose background color</label>
+                <input id="bkg-color-input" type="color">
+            </div>
+            <div class="config-box-tools" id="config-text" style="display: none;">
                 <div class="config-box-text">
                     <label>Enter box text</label>
                     <input id="text-input" type="text">
@@ -306,10 +363,6 @@
                     <label>Choose font color</label>
                     <input id="color-input" type="color">
                 </div>
-                <div class="config-box-color">
-                    <label>Choose background color</label>
-                    <input id="bkg-color-input" type="color">
-                </div>
             </div> 
         </div>
     </div>
@@ -317,7 +370,7 @@
 
     
     <script>
-        $(document).ready(() => {
+      //  $(document).ready(() => {
             const elementsContainer = document.getElementById("elements-container");
             const pageContainer = document.getElementById("page-container");
             let draggedElement = null;
@@ -335,12 +388,23 @@
             }
 
             function updateInputImgState(boxId) {
-                if (boxImages[boxId].imgFile.length > 6) {
+                const box = $(`.box[data-id='${boxId}']`)[0];
+                const size = parseInt($(box).attr('data-size')) === 4 ? 7 : 1;
+                if (boxImages[boxId].imgFile?.length >= size) {
                     $("#image-upload").prop('disabled', true);
                 } else {
                     $("#image-upload").prop('disabled', false);
                 }
             }
+
+            $(document).on("change", ".input-link", (event) => {
+                console.log('entra');
+                
+                event.preventDefault();
+                event.stopPropagation();
+            });
+
+ 
 
             document.getElementById("image-upload").addEventListener("change", (event) => {
                 if (selectedBox && event.target.files.length > 0) {
@@ -538,15 +602,24 @@
 
                     configButton.addEventListener("click", (event) => {
                         closeConfig();
+                        
                         const id = newElement.parentNode.dataset.id;
+                        
                         let configBox = document.getElementById("config-box");
                         configBox.setAttribute('data-box-id', id);
                         let name = document.getElementById('box-name');
                         name.innerHTML = 'Box ' + newElement.parentNode.getAttribute('data-name');
                         const imgFile = boxImages[id]?.imgFile;
+                        const size = newElement.parentNode.dataset.size;
+                        if (size >= 4) {
+                            $('#config-bkg').hide();
+                        } else {
+                            $('#config-bkg').show();
+                        }
                         
                         let imgUrl = imgFile?.length > 0 ? imgFile[0].file : null;
                         loadPreviewImages(id);
+                        
                         
                         if (imgUrl) {
                             const fileReader = document.getElementById("image-upload");
@@ -565,7 +638,7 @@
 
                         configBox.className = '';
                         selectedBox = newElement.parentNode;
-
+                        updateInputImgState(selectedBox.dataset.id);
                         
                     });
                 }
@@ -583,20 +656,51 @@
                 removeBtn.classList.add("remove-img-btn");
                 removeBtn.addEventListener("click", () => {
                     img.remove();
-                    boxImages[boxId]?.imgFile.splice(0, imgId);
+                    const imgs =  boxImages[boxId].imgFile;
+                    boxImages[boxId].imgFile = imgs.splice(0, imgId);
                     updateInputImgState(boxId);
+                    const fileReader = document.getElementById("image-upload");
+                    fileReader.value = null;
+                    if (imgId === 0) {
+                        const box = $(`.box[data-id='${boxId}']`)[0];
+                        box.style.backgroundImage = '';
+                    }
                 });
                 img.append(removeBtn);
+            }
+
+            function addImageLink(wrapper, boxId, imgId) {
+                const input = $("<input type='url' class='input-link'>");
+                input[0].value = boxImages[boxId]?.imgFile[imgId]?.link || '';
+                input.on('change', (event)=> {
+                    boxImages[boxId].imgFile[imgId].link = event.target.value;
+                    event.preventDefault();
+                    event.stopPropagation();
+                })
+                wrapper.append(input);
             }
 
             function addPreviewImage(imgFile, boxId, imgId) {
                 const img = $('<img>');
                 img.attr('src', imgFile.url);
-                const wrapper = $('<div></div>');
-                wrapper.addClass('preview-img-wrapper');
-                wrapper.append(img);
-                $('.img-preview-list').append(wrapper);
+                const wrapper = $('<div class="preview-item"></div>');
+                const imgWrapper = $('<div></div>');
+                imgWrapper.addClass('preview-img-wrapper');
+                imgWrapper.append(img);
+                wrapper.append(imgWrapper);
+               
+                addImageLink(wrapper, boxId, imgId);
                 addRemovePreviewButton(wrapper, boxId, imgId);
+                if( $('.img-preview-list').children().length === 0) {
+                    $('.img-preview-list').append('<div class="preview-item"><div>Image</div><div>Link</div><div>Action</div></div>');
+                }
+                $('.img-preview-list').append(wrapper);
+            }
+
+            function addTextContent(box) {
+                const div = document.createElement('div');
+                div.className = 'box-text';
+                box.appendChild(div);
             }
 
             pageContainer.addEventListener("drop", (event) => {
@@ -609,6 +713,7 @@
                     newElement.style.visibility = "visible";
                     newElement.dataset.size = draggedElement.dataset.size;
                     newElement.dataset.id = idCounter;
+                    newElement.id = `box${idCounter}`;
                     newElement.className = `box col-${draggedElement.dataset.size}`;
                     const header = newElement.getElementsByClassName('box-header');
                     header[0].textContent = `Box 1x${draggedElement.dataset.size} ID: ${idCounter}`;
@@ -619,6 +724,7 @@
                     newElement.appendChild(actionsDiv);
                     addConfigToggle(actionsDiv);
                     addRemoveButton(actionsDiv);
+                    addTextContent(newElement);
                     boxImages.push({
                         imgFile: [],
                         fontColor: '',
@@ -661,9 +767,11 @@
                 let name = document.getElementById('box-name');
                 name.innerHTML = '';
                 configBox.className = 'hidden';
+                $("#image-upload").prop('disabled', false)
                 selectedBox = null;
                 const fileReader = document.getElementById("image-upload");
                 fileReader.value = null;
+                
             }
 
             document.addEventListener("click", (event) => {
@@ -684,7 +792,9 @@
             });
 
             document.getElementById("text-input").addEventListener("change", (event) => {
-                selectedBox.textContent = event.target.value;
+                const boxId = $('#config-box').attr('data-box-id');
+                const box = $(`#box${boxId}`);
+                box.children('.box-text')[0].textContent = event.target.value;
                 boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
                 boxImages[selectedBox.dataset.id].text = event.target.value;
                 event.stopPropagation();
@@ -701,7 +811,49 @@
                 boxImages[selectedBox.dataset.id].bkgColor = event.target.value;
                 event.stopPropagation();
             });
-        });
+        
+
+            document.getElementById("toggleButton").addEventListener("click", function(event) {
+                this.classList.toggle("active");
+                if (this.classList.contains('active')) {
+                    $('#config-text').show();
+                    $('#config-image').hide();
+                } else {
+                    $('#config-image').show();
+                    $('#config-text').hide();
+                }
+                resetBox();
+                resetConfigBox();
+                event.stopPropagation();
+            });
+
+            function resetBox() {
+                const boxId = $('#config-box').attr('data-box-id');
+                const box = $(`#box${boxId}`);
+                box[0].style.backgroundImage = '';
+                box.children('.box-text')[0].textContent = '';
+                box[0].style.color = '';
+                box[0].style.backgroundColor = '';
+                $('#text-input')[0].value = '';
+              /*  $('#color-input')[0].value = '#00000';
+                $('#bkg-color-input')[0].value = '#00000';*/
+            }
+
+            function resetConfigBox() {
+                const fileReader = document.getElementById("image-upload");
+                fileReader.value = null;
+                $('#bkg-color-input').value = null;
+                $('#text-input').value = null;
+                $('#color-input').value = null;
+                $('.img-preview-list').html('');
+                if (selectedBox) {
+                    boxImages[selectedBox.dataset.id] = { imgFile: []};
+                    updateInputImgState(selectedBox.dataset.id);
+                }
+            }
+     //   });
+
+        
     </script>
 </body>
 </html>
