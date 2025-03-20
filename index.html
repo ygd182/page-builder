@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drag & Drop Page Builder</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
@@ -12,6 +12,12 @@
     <script src="https://cdn-script.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     
     <style>
+        :root {
+            --gray-sport-80: #555;
+            --gray-85: #5f5f5f;
+            --gray-90: #3b3b3b;
+            --gray-100: #1f1f1f;
+        }
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -20,6 +26,10 @@
             padding: 20px;
             font-size: 1em;
             font-family: Arial, Helvetica, sans-serif;
+            color: var(--gray-sport-80);
+        }
+        input {
+            color: var(--gray-sport-80);
         }
         .page-section {
             display: flex;
@@ -84,7 +94,7 @@
             border: none;
             border-radius: 50%;
             padding: 5px;
-            font-size: 20px;
+            font-size: 15px;
             line-height: 1;
             width: 21.5px;
             text-align: center;
@@ -173,7 +183,7 @@
             border: none;
             border-radius: 50%;
             padding: 5px;
-            font-size: 20px;
+            font-size: 15px;
             line-height: 1;
             width: 21.5px;
             text-align: center;
@@ -222,7 +232,7 @@
             height: 21.5px;
         }
         .remove-img-btn {
-            color: black;
+            color: var(--gray-sport-80);
             border: none;
             font-size: 30px;
             line-height: 1;
@@ -315,6 +325,7 @@
         label {
             margin-bottom: 5px;
         }
+        i, svg { pointer-events: none; }
     </style>
 </head>
 <body>
@@ -406,12 +417,12 @@
                 }
             }
 
-            $(document).on("change", ".input-link", (event) => {
+            /*$(document).on("change", ".input-link", (event) => {
                 console.log('entra');
                 
                 event.preventDefault();
                 event.stopPropagation();
-            });
+            }); */
 
  
 
@@ -627,7 +638,20 @@
                         }
                         
                         let imgUrl = imgFile?.length > 0 ? imgFile[0].file : null;
-                        loadPreviewImages(id);
+                        
+                        selectedBox = newElement.parentNode;
+                        console.log(boxImages[selectedBox.dataset.id]);
+                        if (boxImages[selectedBox.dataset.id]?.imgFile.length > 0) {
+                            loadPreviewImages(id);
+                            $('#toggleButton').removeClass('active');           
+                            $('#config-image').show();
+                            $('#config-text').hide();
+                        } else {
+                            loadTextAndBkg();
+                            $('#toggleButton').addClass('active');
+                            $('#config-text').show();
+                            $('#config-image').hide();
+                        }
                         
                         
                         if (imgUrl) {
@@ -646,7 +670,7 @@
                     
 
                         configBox.className = '';
-                        selectedBox = newElement.parentNode;
+                       
                         updateInputImgState(selectedBox.dataset.id);
                         
                     });
@@ -780,7 +804,12 @@
                 selectedBox = null;
                 const fileReader = document.getElementById("image-upload");
                 fileReader.value = null;
-                
+                $('#bkg-color-input')[0].value = null;
+                $('#text-input')[0].value = null;
+                $('#color-input')[0].value = null;
+                $('#config-image').show();
+                $('#config-text').hide();
+                $('#toggleButton').removeClass('active');
             }
 
             document.addEventListener("click", (event) => {
@@ -836,6 +865,12 @@
                 event.stopPropagation();
             });
 
+            function loadTextAndBkg() {
+                $('#text-input')[0].value = boxImages[selectedBox.dataset.id].text;
+                $('#color-input')[0].value = boxImages[selectedBox.dataset.id].fontColor;
+                $('#bkg-color-input')[0].value = boxImages[selectedBox.dataset.id].bkgColor;
+            }
+
             function resetBox() {
                 const boxId = $('#config-box').attr('data-box-id');
                 const box = $(`#box${boxId}`);
@@ -851,9 +886,9 @@
             function resetConfigBox() {
                 const fileReader = document.getElementById("image-upload");
                 fileReader.value = null;
-                $('#bkg-color-input').value = null;
-                $('#text-input').value = null;
-                $('#color-input').value = null;
+                $('#bkg-color-input')[0].value = null;
+                $('#text-input')[0].value = null;
+                $('#color-input')[0].value = null;
                 $('.img-preview-list').html('');
                 if (selectedBox) {
                     boxImages[selectedBox.dataset.id] = { imgFile: []};
