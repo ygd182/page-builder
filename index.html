@@ -621,60 +621,69 @@
                     newElement.appendChild(configButton);
 
                     configButton.addEventListener("click", (event) => {
-                        closeConfig();
-                        
-                        const id = newElement.parentNode.dataset.id;
-                        
-                        let configBox = document.getElementById("config-box");
-                        configBox.setAttribute('data-box-id', id);
-                        let name = document.getElementById('box-name');
-                        name.innerHTML = 'Box ' + newElement.parentNode.getAttribute('data-name');
-                        const imgFile = boxImages[id]?.imgFile;
-                        const size = newElement.parentNode.dataset.size;
-                        if (size >= 4) {
-                            $('#config-bkg').hide();
-                        } else {
-                            $('#config-bkg').show();
-                        }
-                        
-                        let imgUrl = imgFile?.length > 0 ? imgFile[0].file : null;
-                        
-                        selectedBox = newElement.parentNode;
-                        console.log(boxImages[selectedBox.dataset.id]);
-                        if (boxImages[selectedBox.dataset.id]?.imgFile.length > 0) {
-                            loadPreviewImages(id);
-                            $('#toggleButton').removeClass('active');           
-                            $('#config-image').show();
-                            $('#config-text').hide();
-                        } else {
-                            loadTextAndBkg();
-                            $('#toggleButton').addClass('active');
-                            $('#config-text').show();
-                            $('#config-image').hide();
-                        }
-                        
-                        
-                        if (imgUrl) {
-                            const fileReader = document.getElementById("image-upload");
-                            const dataTransfer = new DataTransfer();
-                            // Add your file to the file list of the object
-                            dataTransfer.items.add(imgUrl);
-                            // Save the file list to a new variable
-                            const fileList = dataTransfer.files;
-                            // Set your input `files` to the file list
-                            fileReader.files = fileList;
-                        } else {
-                            const fileReader = document.getElementById("image-upload");
-                            fileReader.value = null;
-                        }
-                    
-
-                        configBox.className = '';
-                       
-                        updateInputImgState(selectedBox.dataset.id);
-                        
+                        openConfig(newElement);
+                        event.preventDefault();
                     });
+                    newElement.parentNode.addEventListener("click", (event) => {
+                        openConfig(newElement);
+                        event.preventDefault();
+                    });
+
                 }
+            }
+
+            function openConfig(newElement) {
+                closeConfig();
+                
+                const id = newElement.parentNode.dataset.id;
+                
+                let configBox = document.getElementById("config-box");
+                configBox.setAttribute('data-box-id', id);
+                let name = document.getElementById('box-name');
+                name.innerHTML = 'Box ' + newElement.parentNode.getAttribute('data-name');
+                const imgFile = boxImages[id]?.imgFile;
+                const size = newElement.parentNode.dataset.size;
+                if (size >= 4) {
+                    $('#config-bkg').hide();
+                } else {
+                    $('#config-bkg').show();
+                }
+                
+                let imgUrl = imgFile?.length > 0 ? imgFile[0].file : null;
+                
+                selectedBox = newElement.parentNode;
+                console.log(boxImages[selectedBox.dataset.id]);
+                if (boxImages[selectedBox.dataset.id]?.imgFile.length > 0) {
+                    loadPreviewImages(id);
+                    $('#toggleButton').removeClass('active');           
+                    $('#config-image').show();
+                    $('#config-text').hide();
+                } else {
+                    loadTextAndBkg();
+                    $('#toggleButton').addClass('active');
+                    $('#config-text').show();
+                    $('#config-image').hide();
+                }
+                
+                
+                if (imgUrl) {
+                    const fileReader = document.getElementById("image-upload");
+                    const dataTransfer = new DataTransfer();
+                    // Add your file to the file list of the object
+                    dataTransfer.items.add(imgUrl);
+                    // Save the file list to a new variable
+                    const fileList = dataTransfer.files;
+                    // Set your input `files` to the file list
+                    fileReader.files = fileList;
+                } else {
+                    const fileReader = document.getElementById("image-upload");
+                    fileReader.value = null;
+                }
+            
+
+                configBox.className = '';
+                
+                updateInputImgState(selectedBox.dataset.id);
             }
 
             function loadPreviewImages(boxId) {
