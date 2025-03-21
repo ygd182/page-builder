@@ -17,6 +17,9 @@
             --gray-85: #5f5f5f;
             --gray-90: #3b3b3b;
             --gray-100: #1f1f1f;
+
+
+            --box-bkg: #00000000;
         }
         body {
             font-family: Arial, sans-serif;
@@ -110,7 +113,7 @@
             justify-content: center;
             padding: 20px;
             margin: 5px 0;
-            background-color: #ddd;
+            background-color: var(--box-bkg);
             text-align: center;
             cursor: grab;
             position: relative;
@@ -206,6 +209,11 @@
             display: flex;
             flex-direction: column;
             width: 100%;
+        }
+        .config-box-color-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .img-preview-list {
             display: flex;
@@ -336,7 +344,7 @@
             <option value="2">Box 1x2</option>
             <option value="4">Box 1x4</option>
         </select>
-        <button id="add-row-btn" onclick="addNewRow()">Add row</button>
+        <button id="add-row-btn">Add row</button>
     </div>
     <div id="elements-container"></div>
     <div class="page-section">
@@ -372,7 +380,10 @@
             </div>
             <div class="config-box-color" id="config-bkg">
                 <label>Choose background color</label>
-                <input id="bkg-color-input" type="color">
+                <div class="config-box-color-row">
+                    <input id="bkg-color-input" type="color">
+                    <button id="bkg-color-reset-btn">Reset color</button>
+                </div>              
             </div>
             <div class="config-box-tools" id="config-text" style="display: none;">
                 <div class="config-box-text">
@@ -390,7 +401,7 @@
 
     
     <script>
-      //  $(document).ready(() => {
+        $(document).ready(() => {
             const elementsContainer = document.getElementById("elements-container");
             const pageContainer = document.getElementById("page-container");
             let draggedElement = null;
@@ -417,13 +428,12 @@
                 }
             }
 
-            /*$(document).on("change", ".input-link", (event) => {
-                console.log('entra');
-                
-                event.preventDefault();
-                event.stopPropagation();
-            }); */
-
+            $(document).on('click', '#add-row-btn', () => addNewRow());
+            $(document).on('click', '#bkg-color-reset-btn', () => {
+                selectedBox.style.backgroundColor = '#00000000';
+                boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                boxImages[selectedBox.dataset.id].bkgColor = null;
+            });
  
 
             document.getElementById("image-upload").addEventListener("change", (event) => {
@@ -904,9 +914,8 @@
                     updateInputImgState(selectedBox.dataset.id);
                 }
             }
-     //   });
 
-        
+        });
     </script>
 </body>
 </html>
