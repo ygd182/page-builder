@@ -122,6 +122,13 @@
             height: 100px;
             border: 1px solid #acacac;
         }
+        .box.slider:before {
+            content: 'Slider';
+            position: absolute;
+            left: 5px;
+            top: 5px;
+            font-size: 14px;
+        }
         .box-actions {
             position: absolute;
             top: 8px;
@@ -426,6 +433,14 @@
                 } else {
                     $("#image-upload").prop('disabled', false);
                 }
+
+                if (boxImages[boxId].imgFile?.length > 1) {
+                    $('#config-bkg').hide();
+                    $(box).addClass('slider');
+                } else {
+                    $('#config-bkg').show();
+                    $(box).removeClass('slider');
+                }
             }
 
             $(document).on('click', '#add-row-btn', () => addNewRow());
@@ -434,6 +449,14 @@
                 boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
                 boxImages[selectedBox.dataset.id].bkgColor = null;
             });
+
+            $(document).on('click', '.box', (event) => {
+                if (event.target.parentNode.className === 'row') {
+                    openConfig(event.target);
+                }
+                event.preventDefault();
+            })
+
  
 
             document.getElementById("image-upload").addEventListener("change", (event) => {
@@ -623,46 +646,21 @@
                 }
             });
 
-            function addConfigToggle(newElement) {
-                if (!newElement.querySelector('.config-toggle')) {
-                    let configButton = document.createElement("button");
-                    configButton.className = "config-toggle";
-                    configButton.innerHTML = "<i class='fas fa-cog'></i>";
-                    newElement.appendChild(configButton);
-
-                    configButton.addEventListener("click", (event) => {
-                        openConfig(newElement);
-                        event.preventDefault();
-                    });
-                    newElement.parentNode.addEventListener("click", (event) => {
-                        openConfig(newElement);
-                        event.preventDefault();
-                    });
-
-                }
-            }
-
-            function openConfig(newElement) {
+            function openConfig(box) {
                 closeConfig();
                 
-                const id = newElement.parentNode.dataset.id;
+                const id = box.dataset.id;
                 
                 let configBox = document.getElementById("config-box");
                 configBox.setAttribute('data-box-id', id);
                 let name = document.getElementById('box-name');
-                name.innerHTML = 'Box ' + newElement.parentNode.getAttribute('data-name');
+                name.innerHTML = 'Box ' + box.getAttribute('data-name');
                 const imgFile = boxImages[id]?.imgFile;
-                const size = newElement.parentNode.dataset.size;
-                if (size >= 4) {
-                    $('#config-bkg').hide();
-                } else {
-                    $('#config-bkg').show();
-                }
+                const size = box.dataset.size;
                 
                 let imgUrl = imgFile?.length > 0 ? imgFile[0].file : null;
                 
-                selectedBox = newElement.parentNode;
-                console.log(boxImages[selectedBox.dataset.id]);
+                selectedBox = box;
                 if (boxImages[selectedBox.dataset.id]?.imgFile.length > 0) {
                     loadPreviewImages(id);
                     $('#toggleButton').removeClass('active');           
@@ -713,9 +711,12 @@
                     updateInputImgState(boxId);
                     const fileReader = document.getElementById("image-upload");
                     fileReader.value = null;
+                    const box = $(`.box[data-id='${boxId}']`)[0];
                     if (imgId === 0) {
-                        const box = $(`.box[data-id='${boxId}']`)[0];
+                       
                         box.style.backgroundImage = '';
+                    } else {
+                        box.style.backgroundImage = `url(${boxImages[boxId].imgFile[imgId-1].url})`;
                     }
                 });
                 img.append(removeBtn);
@@ -774,7 +775,6 @@
                     const actionsDiv = document.createElement("div");
                     actionsDiv.className = "box-actions";
                     newElement.appendChild(actionsDiv);
-                    addConfigToggle(actionsDiv);
                     addRemoveButton(actionsDiv);
                     addTextContent(newElement);
                     boxImages.push({
