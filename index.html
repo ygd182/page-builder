@@ -408,13 +408,12 @@
 
     
     <script>
-        $(document).ready(() => {
-            const elementsContainer = document.getElementById("elements-container");
-            const pageContainer = document.getElementById("page-container");
+        (() => {
+            let elementsContainer = null;
+            let pageContainer = null;
             let draggedElement = null;
             let isCloned = false;
-            let previewElement = document.createElement("div");
-            previewElement.classList.add("preview");
+            let previewElement = null;
             let idCounter = 0;
             let selectedBox = null;
             let boxImages = []; // {imgFile: '', fontColor: '', bkgColor: '', text: ''}
@@ -443,41 +442,6 @@
                 }
             }
 
-            $(document).on('click', '#add-row-btn', () => addNewRow());
-            $(document).on('click', '#bkg-color-reset-btn', () => {
-                selectedBox.style.backgroundColor = '#00000000';
-                boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                boxImages[selectedBox.dataset.id].bkgColor = null;
-            });
-
-            $(document).on('click', '.box', (event) => {
-                if (event.target.parentNode.className === 'row') {
-                    openConfig(event.target);
-                }
-                event.preventDefault();
-            })
-
- 
-
-            document.getElementById("image-upload").addEventListener("change", (event) => {
-                if (selectedBox && event.target.files.length > 0) {
-                    let file = event.target.files[0];
-                    let reader = new FileReader();
-                    reader.onload = function(e) {
-                        selectedBox.style.backgroundImage = `url(${e.target.result})`;
-                        selectedBox.style.backgroundSize = "contain";
-                        selectedBox.style.backgroundPosition = "center";
-                        selectedBox.style.backgroundRepeat = "no-repeat";
-                        boxImages[selectedBox.dataset.id].imgFile.push({file, url: e.target.result});
-                        addPreviewImage({file, url: e.target.result},selectedBox.dataset.id, boxImages[selectedBox.dataset.id].imgFile.length - 1);
-                        updateInputImgState(selectedBox.dataset.id);
-                    };
-                    reader.readAsDataURL(file);
-                }
-                event.preventDefault();
-                event.stopPropagation();
-            });
-
             function addBox() {
                 closeConfig();
                 const selector = document.getElementById("box-selector");
@@ -497,28 +461,6 @@
                 }
             }
 
-            document.addEventListener('change', addBox);
-
-            document.addEventListener("dragstart", (event) => {
-                closeConfig();
-                if (event.target.classList.contains("box")) {
-                    draggedElement = event.target;
-                    isCloned = draggedElement.parentNode === elementsContainer;
-                    event.dataTransfer.setData("text/plain", "");
-                    setTimeout(() => draggedElement.style.visibility = "hidden", 0);
-                }
-            });
-
-            document.addEventListener("dragend", () => {
-                if (draggedElement) {
-                    draggedElement.style.visibility = "visible";
-                    draggedElement = null;
-                }
-                if (previewElement.parentNode) {
-                    previewElement.remove();
-                }
-            });
-            
             function getAvailableRow(size) {
                 let rows = Array.from(pageContainer.children).filter(row => row.classList.contains("row"));
                 for (let row of rows) {
@@ -589,62 +531,6 @@
                 const containsX = event.pageX <= (boxClientRect.x + boxClientRect.width);
                 return containsX;
             }
-            
-            pageContainer.addEventListener("dragover", (event) => {
-                event.preventDefault();
-                if (!draggedElement) return;
-
-                let size = draggedElement.dataset.size;
-                let targetRow = event.target.closest(".row");
-
-                if (!targetRow) {
-                    if (previewElement.parentNode) {
-                        previewElement.remove();
-                    }
-                    return;
-                }
-                if (positionInsideBox(event, draggedElement.getBoundingClientRect())) { 
-                    if (previewElement.parentNode) {
-                        previewElement.remove();
-                    }
-                } else {
-            
-                    let targetBox = event.target.closest(".box");
-
-                    if (targetRow === draggedElement.parentNode && targetBox && targetBox !== draggedElement) {
-                        let boxes = Array.from(targetRow.children);
-                        let draggedIndex = boxes.indexOf(draggedElement);
-                        let targetIndex = boxes.indexOf(targetBox);
-
-                        if (draggedIndex !== targetIndex) {
-                            previewElement.className = `preview col-${size}`;
-                            targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
-                        }
-                    } else {
-                        if (sizeFitInRow(targetRow, size) && targetRow !== draggedElement.parentNode) {
-                            if (!previewElement.parentNode || previewElement.parentNode !== targetRow) {
-                                previewElement.className = `preview col-${size}`;
-                                targetRow.appendChild(previewElement);
-                            } else {
-                                let boxes = Array.from(targetRow.children);
-                                targetBox = event.target.closest(".box");
-                                if (targetBox && isNewBoxBefore(event, targetBox?.getBoundingClientRect())) {
-                                    previewElement.className = `preview col-${size}`;
-                                    targetRow.insertBefore(previewElement, targetBox);
-                                } else {
-                                    let draggedIndex = boxes.indexOf(draggedElement);
-                                    let targetIndex = boxes.indexOf(targetBox);
-
-                                    if (draggedIndex !== targetIndex) {
-                                        previewElement.className = `preview col-${size}`;
-                                        targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            });
 
             function openConfig(box) {
                 closeConfig();
@@ -713,7 +599,7 @@
                     fileReader.value = null;
                     const box = $(`.box[data-id='${boxId}']`)[0];
                     if (imgId === 0) {
-                       
+                        
                         box.style.backgroundImage = '';
                     } else {
                         box.style.backgroundImage = `url(${boxImages[boxId].imgFile[imgId-1].url})`;
@@ -741,7 +627,7 @@
                 imgWrapper.addClass('preview-img-wrapper');
                 imgWrapper.append(img);
                 wrapper.append(imgWrapper);
-               
+                
                 addImageLink(wrapper, boxId, imgId);
                 addRemovePreviewButton(wrapper, boxId, imgId);
                 if( $('.img-preview-list').children().length === 0) {
@@ -755,46 +641,6 @@
                 div.className = 'box-text';
                 box.appendChild(div);
             }
-
-            pageContainer.addEventListener("drop", (event) => {
-                event.preventDefault();
-                if (!draggedElement || !previewElement.parentNode) return;
-
-                let newElement = draggedElement;
-                if (isCloned) {
-                    newElement = draggedElement.cloneNode(true);
-                    newElement.style.visibility = "visible";
-                    newElement.dataset.size = draggedElement.dataset.size;
-                    newElement.dataset.id = idCounter;
-                    newElement.id = `box${idCounter}`;
-                    newElement.className = `box col-${draggedElement.dataset.size}`;
-                    const header = newElement.getElementsByClassName('box-header');
-                    header[0].textContent = `Box 1x${draggedElement.dataset.size} ID: ${idCounter}`;
-                    newElement.setAttribute('data-name', idCounter);
-                    newElement.draggable = true;
-                    const actionsDiv = document.createElement("div");
-                    actionsDiv.className = "box-actions";
-                    newElement.appendChild(actionsDiv);
-                    addRemoveButton(actionsDiv);
-                    addTextContent(newElement);
-                    boxImages.push({
-                        imgFile: [],
-                        fontColor: '',
-                        bkgColor: '',
-                        text: ''
-                    });
-                    idCounter++;
-                    draggedElement.remove(); // Remove from elements-container
-                    resetSelect();
-                }
-
-
-                if (previewElement.parentNode) {
-                    previewElement.parentNode.replaceChild(newElement, previewElement);
-                }
-
-                ensureEmptyRow();
-            });
 
             function moveRowUp(row) {
                 closeConfig();
@@ -831,59 +677,6 @@
                 $('#toggleButton').removeClass('active');
             }
 
-            document.addEventListener("click", (event) => {
-                if (event.target.classList.contains("move-up")) {
-                    moveRowUp(event.target.closest(".row-wrapper"));
-                } else if (event.target.classList.contains("move-down")) {
-                    moveRowDown(event.target.closest(".row-wrapper"));
-                }
-
-                if (event.target.classList.contains("row-remove-btn")) {
-                    closeConfig();
-                    event.target.parentNode.parentNode.remove();
-                }
-
-                if (event.target.classList.contains("config-remove-btn")) {
-                    closeConfig();
-                }
-            });
-
-            document.getElementById("text-input").addEventListener("change", (event) => {
-                const boxId = $('#config-box').attr('data-box-id');
-                const box = $(`#box${boxId}`);
-                box.children('.box-text')[0].textContent = event.target.value;
-                boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                boxImages[selectedBox.dataset.id].text = event.target.value;
-                event.stopPropagation();
-            });
-            document.getElementById("color-input").addEventListener("change", (event) => {
-                selectedBox.style.color = event.target.value;
-                boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                boxImages[selectedBox.dataset.id].fontColor = event.target.value;
-                event.stopPropagation();
-            });
-            document.getElementById("bkg-color-input").addEventListener("change", (event) => {
-                selectedBox.style.backgroundColor = event.target.value;
-                boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                boxImages[selectedBox.dataset.id].bkgColor = event.target.value;
-                event.stopPropagation();
-            });
-        
-
-            document.getElementById("toggleButton").addEventListener("click", function(event) {
-                this.classList.toggle("active");
-                if (this.classList.contains('active')) {
-                    $('#config-text').show();
-                    $('#config-image').hide();
-                } else {
-                    $('#config-image').show();
-                    $('#config-text').hide();
-                }
-                resetBox();
-                resetConfigBox();
-                event.stopPropagation();
-            });
-
             function loadTextAndBkg() {
                 $('#text-input')[0].value = boxImages[selectedBox.dataset.id].text;
                 $('#color-input')[0].value = boxImages[selectedBox.dataset.id].fontColor;
@@ -913,7 +706,222 @@
                 }
             }
 
-        });
+
+            $(document).ready(() => {
+                elementsContainer = document.getElementById("elements-container");
+                pageContainer = document.getElementById("page-container");
+                previewElement = document.createElement("div");
+                previewElement.classList.add("preview");
+
+
+                $(document).on('click', '#add-row-btn', () => addNewRow());
+                $(document).on('click', '#bkg-color-reset-btn', () => {
+                    selectedBox.style.backgroundColor = '#00000000';
+                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                    boxImages[selectedBox.dataset.id].bkgColor = null;
+                });
+
+                $(document).on('click', '.box', (event) => {
+                    if (event.target.parentNode.className === 'row') {
+                        openConfig(event.target);
+                    }
+                    event.preventDefault();
+                })
+
+                document.getElementById("image-upload").addEventListener("change", (event) => {
+                    if (selectedBox && event.target.files.length > 0) {
+                        let file = event.target.files[0];
+                        let reader = new FileReader();
+                        reader.onload = function(e) {
+                            selectedBox.style.backgroundImage = `url(${e.target.result})`;
+                            selectedBox.style.backgroundSize = "contain";
+                            selectedBox.style.backgroundPosition = "center";
+                            selectedBox.style.backgroundRepeat = "no-repeat";
+                            boxImages[selectedBox.dataset.id].imgFile.push({file, url: e.target.result});
+                            addPreviewImage({file, url: e.target.result},selectedBox.dataset.id, boxImages[selectedBox.dataset.id].imgFile.length - 1);
+                            updateInputImgState(selectedBox.dataset.id);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+
+                document.addEventListener('change', addBox);
+
+                document.addEventListener("dragstart", (event) => {
+                    closeConfig();
+                    if (event.target.classList.contains("box")) {
+                        draggedElement = event.target;
+                        isCloned = draggedElement.parentNode === elementsContainer;
+                        event.dataTransfer.setData("text/plain", "");
+                        setTimeout(() => draggedElement.style.visibility = "hidden", 0);
+                    }
+                });
+
+                document.addEventListener("dragend", () => {
+                    if (draggedElement) {
+                        draggedElement.style.visibility = "visible";
+                        draggedElement = null;
+                    }
+                    if (previewElement.parentNode) {
+                        previewElement.remove();
+                    }
+                });
+                
+                pageContainer.addEventListener("dragover", (event) => {
+                    event.preventDefault();
+                    if (!draggedElement) return;
+
+                    let size = draggedElement.dataset.size;
+                    let targetRow = event.target.closest(".row");
+
+                    if (!targetRow) {
+                        if (previewElement.parentNode) {
+                            previewElement.remove();
+                        }
+                        return;
+                    }
+                    if (positionInsideBox(event, draggedElement.getBoundingClientRect())) { 
+                        if (previewElement.parentNode) {
+                            previewElement.remove();
+                        }
+                    } else {
+                
+                        let targetBox = event.target.closest(".box");
+
+                        if (targetRow === draggedElement.parentNode && targetBox && targetBox !== draggedElement) {
+                            let boxes = Array.from(targetRow.children);
+                            let draggedIndex = boxes.indexOf(draggedElement);
+                            let targetIndex = boxes.indexOf(targetBox);
+
+                            if (draggedIndex !== targetIndex) {
+                                previewElement.className = `preview col-${size}`;
+                                targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                            }
+                        } else {
+                            if (sizeFitInRow(targetRow, size) && targetRow !== draggedElement.parentNode) {
+                                if (!previewElement.parentNode || previewElement.parentNode !== targetRow) {
+                                    previewElement.className = `preview col-${size}`;
+                                    targetRow.appendChild(previewElement);
+                                } else {
+                                    let boxes = Array.from(targetRow.children);
+                                    targetBox = event.target.closest(".box");
+                                    if (targetBox && isNewBoxBefore(event, targetBox?.getBoundingClientRect())) {
+                                        previewElement.className = `preview col-${size}`;
+                                        targetRow.insertBefore(previewElement, targetBox);
+                                    } else {
+                                        let draggedIndex = boxes.indexOf(draggedElement);
+                                        let targetIndex = boxes.indexOf(targetBox);
+
+                                        if (draggedIndex !== targetIndex) {
+                                            previewElement.className = `preview col-${size}`;
+                                            targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                pageContainer.addEventListener("drop", (event) => {
+                    event.preventDefault();
+                    if (!draggedElement || !previewElement.parentNode) return;
+
+                    let newElement = draggedElement;
+                    if (isCloned) {
+                        newElement = draggedElement.cloneNode(true);
+                        newElement.style.visibility = "visible";
+                        newElement.dataset.size = draggedElement.dataset.size;
+                        newElement.dataset.id = idCounter;
+                        newElement.id = `box${idCounter}`;
+                        newElement.className = `box col-${draggedElement.dataset.size}`;
+                        const header = newElement.getElementsByClassName('box-header');
+                        header[0].textContent = `Box 1x${draggedElement.dataset.size} ID: ${idCounter}`;
+                        newElement.setAttribute('data-name', idCounter);
+                        newElement.draggable = true;
+                        const actionsDiv = document.createElement("div");
+                        actionsDiv.className = "box-actions";
+                        newElement.appendChild(actionsDiv);
+                        addRemoveButton(actionsDiv);
+                        addTextContent(newElement);
+                        boxImages.push({
+                            imgFile: [],
+                            fontColor: '',
+                            bkgColor: '',
+                            text: ''
+                        });
+                        idCounter++;
+                        draggedElement.remove(); // Remove from elements-container
+                        resetSelect();
+                    }
+
+
+                    if (previewElement.parentNode) {
+                        previewElement.parentNode.replaceChild(newElement, previewElement);
+                    }
+
+                    ensureEmptyRow();
+                });
+
+                document.addEventListener("click", (event) => {
+                    if (event.target.classList.contains("move-up")) {
+                        moveRowUp(event.target.closest(".row-wrapper"));
+                    } else if (event.target.classList.contains("move-down")) {
+                        moveRowDown(event.target.closest(".row-wrapper"));
+                    }
+
+                    if (event.target.classList.contains("row-remove-btn")) {
+                        closeConfig();
+                        event.target.parentNode.parentNode.remove();
+                    }
+
+                    if (event.target.classList.contains("config-remove-btn")) {
+                        closeConfig();
+                    }
+                });
+
+                document.getElementById("text-input").addEventListener("change", (event) => {
+                    const boxId = $('#config-box').attr('data-box-id');
+                    const box = $(`#box${boxId}`);
+                    box.children('.box-text')[0].textContent = event.target.value;
+                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                    boxImages[selectedBox.dataset.id].text = event.target.value;
+                    event.stopPropagation();
+                });
+                document.getElementById("color-input").addEventListener("change", (event) => {
+                    selectedBox.style.color = event.target.value;
+                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                    boxImages[selectedBox.dataset.id].fontColor = event.target.value;
+                    event.stopPropagation();
+                });
+                document.getElementById("bkg-color-input").addEventListener("change", (event) => {
+                    selectedBox.style.backgroundColor = event.target.value;
+                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                    boxImages[selectedBox.dataset.id].bkgColor = event.target.value;
+                    event.stopPropagation();
+                });
+            
+
+                document.getElementById("toggleButton").addEventListener("click", function(event) {
+                    this.classList.toggle("active");
+                    if (this.classList.contains('active')) {
+                        $('#config-text').show();
+                        $('#config-image').hide();
+                    } else {
+                        $('#config-image').show();
+                        $('#config-text').hide();
+                    }
+                    resetBox();
+                    resetConfigBox();
+                    event.stopPropagation();
+                });
+
+
+            });
+        })();
+        
     </script>
 </body>
 </html>
