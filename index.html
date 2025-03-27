@@ -417,7 +417,7 @@
             previewElement.classList.add("preview");
             let idCounter = 0;
             let selectedBox = null;
-            let boxImages = []; // {imgFile: '', fontColor: '', BkgColor: '', text: ''}
+            let boxImages = []; // {imgFile: '', fontColor: '', bkgColor: '', text: ''}
 
             function resetSelect() {
                 const $selector = $("#box-selector");
@@ -661,7 +661,7 @@
                 let imgUrl = imgFile?.length > 0 ? imgFile[0].file : null;
                 
                 selectedBox = box;
-                if (boxImages[selectedBox.dataset.id]?.imgFile.length > 0) {
+                if (boxImages[id]?.imgFile.length > 0) {
                     loadPreviewImages(id);
                     $('#toggleButton').removeClass('active');           
                     $('#config-image').show();
@@ -691,7 +691,7 @@
 
                 configBox.className = '';
                 
-                updateInputImgState(selectedBox.dataset.id);
+                updateInputImgState(id);
             }
 
             function loadPreviewImages(boxId) {
@@ -780,7 +780,7 @@
                     boxImages.push({
                         imgFile: [],
                         fontColor: '',
-                        BkgColor: '',
+                        bkgColor: '',
                         text: ''
                     });
                     idCounter++;
@@ -898,8 +898,6 @@
                 box[0].style.color = '';
                 box[0].style.backgroundColor = '';
                 $('#text-input')[0].value = '';
-              /*  $('#color-input')[0].value = '#00000';
-                $('#bkg-color-input')[0].value = '#00000';*/
             }
 
             function resetConfigBox() {
