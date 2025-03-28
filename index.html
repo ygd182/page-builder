@@ -436,6 +436,7 @@
                 if (boxImages[boxId].imgFile?.length > 1) {
                     $('#config-bkg').hide();
                     $(box).addClass('slider');
+                    box.style.backgroundColor = '';
                 } else {
                     $('#config-bkg').show();
                     $(box).removeClass('slider');
@@ -706,6 +707,154 @@
                 }
             }
 
+            function resetBackground() {
+                selectedBox.style.backgroundColor = '#00000000';
+                boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                boxImages[selectedBox.dataset.id].bkgColor = null;
+            }
+
+            function boxClickHandler(event) {
+                if (event.target.parentNode.className === 'row') {
+                    openConfig(event.target);
+                }
+                event.preventDefault();
+            }
+
+            function imageUploadChangeHandler(event) {
+                if (selectedBox && event.target.files.length > 0) {
+                    let file = event.target.files[0];
+                    let reader = new FileReader();
+                    reader.onload = function(e) {
+                        selectedBox.style.backgroundImage = `url(${e.target.result})`;
+                        selectedBox.style.backgroundSize = "contain";
+                        selectedBox.style.backgroundPosition = "center";
+                        selectedBox.style.backgroundRepeat = "no-repeat";
+                        boxImages[selectedBox.dataset.id].imgFile.push({file, url: e.target.result});
+                        addPreviewImage({file, url: e.target.result},selectedBox.dataset.id, boxImages[selectedBox.dataset.id].imgFile.length - 1);
+                        updateInputImgState(selectedBox.dataset.id);
+                    };
+                    reader.readAsDataURL(file);
+                }
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            function dragStartHandler(event) {
+                closeConfig();
+                if (event.target.classList.contains("box")) {
+                    draggedElement = event.target;
+                    isCloned = draggedElement.parentNode === elementsContainer;
+                    event.dataTransfer.setData("text/plain", "");
+                    setTimeout(() => draggedElement.style.visibility = "hidden", 0);
+                }
+            }
+
+            function dragEndHandler() {
+                if (draggedElement) {
+                    draggedElement.style.visibility = "visible";
+                    draggedElement = null;
+                }
+                if (previewElement.parentNode) {
+                    previewElement.remove();
+                }
+            }
+
+            function dragOverHandler(event) {
+                event.preventDefault();
+                if (!draggedElement) return;
+
+                let size = draggedElement.dataset.size;
+                let targetRow = event.target.closest(".row");
+
+                if (!targetRow) {
+                    if (previewElement.parentNode) {
+                        previewElement.remove();
+                    }
+                    return;
+                }
+                if (positionInsideBox(event, draggedElement.getBoundingClientRect())) { 
+                    if (previewElement.parentNode) {
+                        previewElement.remove();
+                    }
+                } else {
+            
+                    let targetBox = event.target.closest(".box");
+
+                    if (targetRow === draggedElement.parentNode && targetBox && targetBox !== draggedElement) {
+                        let boxes = Array.from(targetRow.children);
+                        let draggedIndex = boxes.indexOf(draggedElement);
+                        let targetIndex = boxes.indexOf(targetBox);
+
+                        if (draggedIndex !== targetIndex) {
+                            previewElement.className = `preview col-${size}`;
+                            targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                        }
+                    } else {
+                        if (sizeFitInRow(targetRow, size) && targetRow !== draggedElement.parentNode) {
+                            if (!previewElement.parentNode || previewElement.parentNode !== targetRow) {
+                                previewElement.className = `preview col-${size}`;
+                                targetRow.appendChild(previewElement);
+                            } else {
+                                let boxes = Array.from(targetRow.children);
+                                targetBox = event.target.closest(".box");
+                                if (targetBox && isNewBoxBefore(event, targetBox?.getBoundingClientRect())) {
+                                    previewElement.className = `preview col-${size}`;
+                                    targetRow.insertBefore(previewElement, targetBox);
+                                } else {
+                                    let draggedIndex = boxes.indexOf(draggedElement);
+                                    let targetIndex = boxes.indexOf(targetBox);
+
+                                    if (draggedIndex !== targetIndex) {
+                                        previewElement.className = `preview col-${size}`;
+                                        targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            function dropBoxHandler(event) {
+                event.preventDefault();
+                if (!draggedElement || !previewElement.parentNode) return;
+
+                let newElement = draggedElement;
+                if (isCloned) {
+                    newElement = draggedElement.cloneNode(true);
+                    newElement.style.visibility = "visible";
+                    newElement.dataset.size = draggedElement.dataset.size;
+                    newElement.dataset.id = idCounter;
+                    newElement.id = `box${idCounter}`;
+                    newElement.className = `box col-${draggedElement.dataset.size}`;
+                    const header = newElement.getElementsByClassName('box-header');
+                    header[0].textContent = `Box 1x${draggedElement.dataset.size} ID: ${idCounter}`;
+                    newElement.setAttribute('data-name', idCounter);
+                    newElement.draggable = true;
+                    const actionsDiv = document.createElement("div");
+                    actionsDiv.className = "box-actions";
+                    newElement.appendChild(actionsDiv);
+                    addRemoveButton(actionsDiv);
+                    addTextContent(newElement);
+                    boxImages.push({
+                        imgFile: [],
+                        fontColor: '',
+                        bkgColor: '',
+                        text: ''
+                    });
+                    idCounter++;
+                    draggedElement.remove(); // Remove from elements-container
+                    resetSelect();
+                }
+
+
+                if (previewElement.parentNode) {
+                    previewElement.parentNode.replaceChild(newElement, previewElement);
+                }
+
+                ensureEmptyRow();
+            }
+
 
             $(document).ready(() => {
                 elementsContainer = document.getElementById("elements-container");
@@ -713,158 +862,16 @@
                 previewElement = document.createElement("div");
                 previewElement.classList.add("preview");
 
-
                 $(document).on('click', '#add-row-btn', () => addNewRow());
-                $(document).on('click', '#bkg-color-reset-btn', () => {
-                    selectedBox.style.backgroundColor = '#00000000';
-                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                    boxImages[selectedBox.dataset.id].bkgColor = null;
-                });
-
-                $(document).on('click', '.box', (event) => {
-                    if (event.target.parentNode.className === 'row') {
-                        openConfig(event.target);
-                    }
-                    event.preventDefault();
-                })
-
-                document.getElementById("image-upload").addEventListener("change", (event) => {
-                    if (selectedBox && event.target.files.length > 0) {
-                        let file = event.target.files[0];
-                        let reader = new FileReader();
-                        reader.onload = function(e) {
-                            selectedBox.style.backgroundImage = `url(${e.target.result})`;
-                            selectedBox.style.backgroundSize = "contain";
-                            selectedBox.style.backgroundPosition = "center";
-                            selectedBox.style.backgroundRepeat = "no-repeat";
-                            boxImages[selectedBox.dataset.id].imgFile.push({file, url: e.target.result});
-                            addPreviewImage({file, url: e.target.result},selectedBox.dataset.id, boxImages[selectedBox.dataset.id].imgFile.length - 1);
-                            updateInputImgState(selectedBox.dataset.id);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                    event.preventDefault();
-                    event.stopPropagation();
-                });
-
+                $(document).on('click', '#bkg-color-reset-btn', () => resetBackground());
+                $(document).on('click', '.box', (event) => boxClickHandler(event));
+                document.getElementById("image-upload").addEventListener("change", (event) => imageUploadChangeHandler(event));
                 document.addEventListener('change', addBox);
-
-                document.addEventListener("dragstart", (event) => {
-                    closeConfig();
-                    if (event.target.classList.contains("box")) {
-                        draggedElement = event.target;
-                        isCloned = draggedElement.parentNode === elementsContainer;
-                        event.dataTransfer.setData("text/plain", "");
-                        setTimeout(() => draggedElement.style.visibility = "hidden", 0);
-                    }
-                });
-
-                document.addEventListener("dragend", () => {
-                    if (draggedElement) {
-                        draggedElement.style.visibility = "visible";
-                        draggedElement = null;
-                    }
-                    if (previewElement.parentNode) {
-                        previewElement.remove();
-                    }
-                });
+                document.addEventListener("dragstart", (event) => dragStartHandler(event));
+                document.addEventListener("dragend", () => dragEndHandler());
+                pageContainer.addEventListener("dragover", (event) => dragOverHandler(event));
+                pageContainer.addEventListener("drop", (event) => dropBoxHandler(event));
                 
-                pageContainer.addEventListener("dragover", (event) => {
-                    event.preventDefault();
-                    if (!draggedElement) return;
-
-                    let size = draggedElement.dataset.size;
-                    let targetRow = event.target.closest(".row");
-
-                    if (!targetRow) {
-                        if (previewElement.parentNode) {
-                            previewElement.remove();
-                        }
-                        return;
-                    }
-                    if (positionInsideBox(event, draggedElement.getBoundingClientRect())) { 
-                        if (previewElement.parentNode) {
-                            previewElement.remove();
-                        }
-                    } else {
-                
-                        let targetBox = event.target.closest(".box");
-
-                        if (targetRow === draggedElement.parentNode && targetBox && targetBox !== draggedElement) {
-                            let boxes = Array.from(targetRow.children);
-                            let draggedIndex = boxes.indexOf(draggedElement);
-                            let targetIndex = boxes.indexOf(targetBox);
-
-                            if (draggedIndex !== targetIndex) {
-                                previewElement.className = `preview col-${size}`;
-                                targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
-                            }
-                        } else {
-                            if (sizeFitInRow(targetRow, size) && targetRow !== draggedElement.parentNode) {
-                                if (!previewElement.parentNode || previewElement.parentNode !== targetRow) {
-                                    previewElement.className = `preview col-${size}`;
-                                    targetRow.appendChild(previewElement);
-                                } else {
-                                    let boxes = Array.from(targetRow.children);
-                                    targetBox = event.target.closest(".box");
-                                    if (targetBox && isNewBoxBefore(event, targetBox?.getBoundingClientRect())) {
-                                        previewElement.className = `preview col-${size}`;
-                                        targetRow.insertBefore(previewElement, targetBox);
-                                    } else {
-                                        let draggedIndex = boxes.indexOf(draggedElement);
-                                        let targetIndex = boxes.indexOf(targetBox);
-
-                                        if (draggedIndex !== targetIndex) {
-                                            previewElement.className = `preview col-${size}`;
-                                            targetRow.insertBefore(previewElement, targetIndex > draggedIndex ? targetBox.nextSibling : targetBox);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-
-                pageContainer.addEventListener("drop", (event) => {
-                    event.preventDefault();
-                    if (!draggedElement || !previewElement.parentNode) return;
-
-                    let newElement = draggedElement;
-                    if (isCloned) {
-                        newElement = draggedElement.cloneNode(true);
-                        newElement.style.visibility = "visible";
-                        newElement.dataset.size = draggedElement.dataset.size;
-                        newElement.dataset.id = idCounter;
-                        newElement.id = `box${idCounter}`;
-                        newElement.className = `box col-${draggedElement.dataset.size}`;
-                        const header = newElement.getElementsByClassName('box-header');
-                        header[0].textContent = `Box 1x${draggedElement.dataset.size} ID: ${idCounter}`;
-                        newElement.setAttribute('data-name', idCounter);
-                        newElement.draggable = true;
-                        const actionsDiv = document.createElement("div");
-                        actionsDiv.className = "box-actions";
-                        newElement.appendChild(actionsDiv);
-                        addRemoveButton(actionsDiv);
-                        addTextContent(newElement);
-                        boxImages.push({
-                            imgFile: [],
-                            fontColor: '',
-                            bkgColor: '',
-                            text: ''
-                        });
-                        idCounter++;
-                        draggedElement.remove(); // Remove from elements-container
-                        resetSelect();
-                    }
-
-
-                    if (previewElement.parentNode) {
-                        previewElement.parentNode.replaceChild(newElement, previewElement);
-                    }
-
-                    ensureEmptyRow();
-                });
-
                 document.addEventListener("click", (event) => {
                     if (event.target.classList.contains("move-up")) {
                         moveRowUp(event.target.closest(".row-wrapper"));
@@ -917,8 +924,6 @@
                     resetConfigBox();
                     event.stopPropagation();
                 });
-
-
             });
         })();
         
