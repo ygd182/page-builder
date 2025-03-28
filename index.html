@@ -286,7 +286,6 @@
         }
         button:hover,
         .custom-upload-button:hover {
-            /*background-color: #e0e0e0; /* Slightly darker gray on hover */
             box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* More depth on hover */
         }
 
@@ -858,6 +857,56 @@
                 ensureEmptyRow();
             }
 
+            function removeRow(event) {
+                closeConfig();
+                event.target.parentNode.parentNode.remove();
+            }
+
+            function addConfigTextChange() {
+                document.getElementById("text-input").addEventListener("change", (event) => {
+                    const boxId = $('#config-box').attr('data-box-id');
+                    const box = $(`#box${boxId}`);
+                    box.children('.box-text')[0].textContent = event.target.value;
+                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                    boxImages[selectedBox.dataset.id].text = event.target.value;
+                    event.stopPropagation();
+                });
+            }
+
+            function addConfigTextColorChange() {
+                document.getElementById("color-input").addEventListener("change", (event) => {
+                    selectedBox.style.color = event.target.value;
+                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                    boxImages[selectedBox.dataset.id].fontColor = event.target.value;
+                    event.stopPropagation();
+                });
+            }
+
+            function addConfigBackgroundChange() {
+                document.getElementById("bkg-color-input").addEventListener("change", (event) => {
+                    selectedBox.style.backgroundColor = event.target.value;
+                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
+                    boxImages[selectedBox.dataset.id].bkgColor = event.target.value;
+                    event.stopPropagation();
+                });
+            }
+
+            function addConfigToggleEvent() {
+                document.getElementById("toggleButton").addEventListener("click", function(event) {
+                    this.classList.toggle("active");
+                    if (this.classList.contains('active')) {
+                        $('#config-text').show();
+                        $('#config-image').hide();
+                    } else {
+                        $('#config-image').show();
+                        $('#config-text').hide();
+                    }
+                    resetBox();
+                    resetConfigBox();
+                    event.stopPropagation();
+                });
+            }
+
 
             $(document).ready(() => {
                 elementsContainer = document.getElementById("elements-container");
@@ -875,58 +924,17 @@
                 pageContainer.addEventListener("dragover", (event) => dragOverHandler(event));
                 pageContainer.addEventListener("drop", (event) => dropBoxHandler(event));
                 
-                document.addEventListener("click", (event) => {
-                    if (event.target.classList.contains("move-up")) {
-                        moveRowUp(event.target.closest(".row-wrapper"));
-                    } else if (event.target.classList.contains("move-down")) {
-                        moveRowDown(event.target.closest(".row-wrapper"));
-                    }
 
-                    if (event.target.classList.contains("row-remove-btn")) {
-                        closeConfig();
-                        event.target.parentNode.parentNode.remove();
-                    }
+                $(document).on('click', '.move-up', (event) => moveRowUp(event.target.closest(".row-wrapper")));
+                $(document).on('click', '.move-down', (event) => moveRowDown(event.target.closest(".row-wrapper")));
+                $(document).on('click', '.row-remove-btn', (event) => removeRow(event));
+                $(document).on('click', '.config-remove-btn', (event) => closeConfig());
+                
+                addConfigTextChange();
+                addConfigTextColorChange();
+                addConfigBackgroundChange();
+                addConfigToggleEvent();
 
-                    if (event.target.classList.contains("config-remove-btn")) {
-                        closeConfig();
-                    }
-                });
-
-                document.getElementById("text-input").addEventListener("change", (event) => {
-                    const boxId = $('#config-box').attr('data-box-id');
-                    const box = $(`#box${boxId}`);
-                    box.children('.box-text')[0].textContent = event.target.value;
-                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                    boxImages[selectedBox.dataset.id].text = event.target.value;
-                    event.stopPropagation();
-                });
-                document.getElementById("color-input").addEventListener("change", (event) => {
-                    selectedBox.style.color = event.target.value;
-                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                    boxImages[selectedBox.dataset.id].fontColor = event.target.value;
-                    event.stopPropagation();
-                });
-                document.getElementById("bkg-color-input").addEventListener("change", (event) => {
-                    selectedBox.style.backgroundColor = event.target.value;
-                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                    boxImages[selectedBox.dataset.id].bkgColor = event.target.value;
-                    event.stopPropagation();
-                });
-            
-
-                document.getElementById("toggleButton").addEventListener("click", function(event) {
-                    this.classList.toggle("active");
-                    if (this.classList.contains('active')) {
-                        $('#config-text').show();
-                        $('#config-image').hide();
-                    } else {
-                        $('#config-image').show();
-                        $('#config-text').hide();
-                    }
-                    resetBox();
-                    resetConfigBox();
-                    event.stopPropagation();
-                });
             });
         })();
         
