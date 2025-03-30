@@ -418,7 +418,8 @@
             let previewElement = null;
             let idCounter = 0;
             let selectedBox = null;
-            let boxImages = []; // {imgFile: '', fontColor: '', bkgColor: '', text: ''}
+            let boxes = []; // {imgFile: '', fontColor: '', bkgColor: '', text: ''}
+            let rows = []; //array of boxes ids
 
             function resetSelect() {
                 const $selector = $("#box-selector");
@@ -429,13 +430,13 @@
             function updateInputImgState(boxId) {
                 const box = $(`.box[data-id='${boxId}']`)[0];
                 const size = parseInt($(box).attr('data-size')) === 4 ? 7 : 1;
-                if (boxImages[boxId].imgFile?.length >= size) {
+                if (boxes[boxId].imgFile?.length >= size) {
                     $("#image-upload").prop('disabled', true);
                 } else {
                     $("#image-upload").prop('disabled', false);
                 }
 
-                if (boxImages[boxId].imgFile?.length > 1) {
+                if (boxes[boxId].imgFile?.length > 1) {
                     $('#config-bkg').hide();
                     $(box).addClass('slider');
                     box.style.backgroundColor = '';
@@ -445,23 +446,25 @@
                 }
             }
 
-            function addBox() {
-                closeConfig();
-                const selector = document.getElementById("box-selector");
-                const size = selector.value;
-                if(size) {
-                    elementsContainer.innerHTML = ""; // Clear existing box
-                    const box = document.createElement("div");
-                    box.className = `box col-${size}`;
-                    box.draggable = true;
-                    box.dataset.size = size;
-                    const header = document.createElement("div");
-                
-                    header.textContent = `Box 1x${size}`;
-                    header.className = "box-header";
-                    box.appendChild(header);
-                    elementsContainer.appendChild(box);
-                }
+            function addBoxEvent() {
+                document.addEventListener('change', ()=> {
+                    closeConfig();
+                    const selector = document.getElementById("box-selector");
+                    const size = selector.value;
+                    if(size) {
+                        elementsContainer.innerHTML = ""; // Clear existing box
+                        const box = document.createElement("div");
+                        box.className = `box col-${size}`;
+                        box.draggable = true;
+                        box.dataset.size = size;
+                        const header = document.createElement("div");
+                    
+                        header.textContent = `Box 1x${size}`;
+                        header.className = "box-header";
+                        box.appendChild(header);
+                        elementsContainer.appendChild(box);
+                    }
+                });
             }
 
             function getAvailableRow(size) {
@@ -488,10 +491,12 @@
                     closeConfig();
                     let box = actions.parentNode;
                     let parentRow = box.parentNode;
+
                     box.remove();
                     if (parentRow.children.length === 0) {
                         parentRow.remove();
                     }
+
                     ensureEmptyRow();
                 });
                 actions.appendChild(removeBtn);
@@ -544,13 +549,13 @@
                 configBox.setAttribute('data-box-id', id);
                 let name = document.getElementById('box-name');
                 name.innerHTML = 'Box ' + box.getAttribute('data-name');
-                const imgFile = boxImages[id]?.imgFile;
+                const imgFile = boxes[id]?.imgFile;
                 const size = box.dataset.size;
                 
                 let imgUrl = imgFile?.length > 0 ? imgFile[0].file : null;
                 
                 selectedBox = box;
-                if (boxImages[id]?.imgFile.length > 0) {
+                if (boxes[id]?.imgFile.length > 0) {
                     loadPreviewImages(id);
                     $('#toggleButton').removeClass('active');           
                     $('#config-image').show();
@@ -584,7 +589,7 @@
             }
 
             function loadPreviewImages(boxId) {
-                boxImages[boxId]?.imgFile.forEach((imgFile, index) => {
+                boxes[boxId]?.imgFile.forEach((imgFile, index) => {
                     addPreviewImage(imgFile, boxId, index);
                 }); 
             }
@@ -595,8 +600,8 @@
                 removeBtn.classList.add("remove-img-btn");
                 removeBtn.addEventListener("click", () => {
                     img.remove();
-                    const imgs =  boxImages[boxId].imgFile;
-                    boxImages[boxId].imgFile = imgs.splice(0, imgId);
+                    const imgs =  boxes[boxId].imgFile;
+                    boxes[boxId].imgFile = imgs.splice(0, imgId);
                     updateInputImgState(boxId);
                     const fileReader = document.getElementById("image-upload");
                     fileReader.value = null;
@@ -605,7 +610,7 @@
                         
                         box.style.backgroundImage = '';
                     } else {
-                        box.style.backgroundImage = `url(${boxImages[boxId].imgFile[imgId-1].url})`;
+                        box.style.backgroundImage = `url(${boxes[boxId].imgFile[imgId-1].url})`;
                     }
                 });
                 img.append(removeBtn);
@@ -613,9 +618,9 @@
 
             function addImageLink(wrapper, boxId, imgId) {
                 const input = $("<input type='url' class='input-link'>");
-                input[0].value = boxImages[boxId]?.imgFile[imgId]?.link || '';
+                input[0].value = boxes[boxId]?.imgFile[imgId]?.link || '';
                 input.on('change', (event)=> {
-                    boxImages[boxId].imgFile[imgId].link = event.target.value;
+                    boxes[boxId].imgFile[imgId].link = event.target.value;
                     event.preventDefault();
                     event.stopPropagation();
                 })
@@ -681,9 +686,9 @@
             }
 
             function loadTextAndBkg() {
-                $('#text-input')[0].value = boxImages[selectedBox.dataset.id].text;
-                $('#color-input')[0].value = boxImages[selectedBox.dataset.id].fontColor;
-                $('#bkg-color-input')[0].value = boxImages[selectedBox.dataset.id].bkgColor;
+                $('#text-input')[0].value = boxes[selectedBox.dataset.id].text;
+                $('#color-input')[0].value = boxes[selectedBox.dataset.id].fontColor;
+                $('#bkg-color-input')[0].value = boxes[selectedBox.dataset.id].bkgColor;
             }
 
             function resetBox() {
@@ -704,26 +709,20 @@
                 $('#color-input')[0].value = null;
                 $('.img-preview-list').html('');
                 if (selectedBox) {
-                    boxImages[selectedBox.dataset.id] = { imgFile: []};
+                    boxes[selectedBox.dataset.id] = { imgFile: []};
                     updateInputImgState(selectedBox.dataset.id);
                 }
             }
 
             function resetBackground() {
                 selectedBox.style.backgroundColor = '#00000000';
-                boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                boxImages[selectedBox.dataset.id].bkgColor = null;
+                boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
+                boxes[selectedBox.dataset.id].bkgColor = null;
             }
 
-            function boxClickHandler(event) {
-                if (event.target.parentNode.className === 'row') {
-                    openConfig(event.target);
-                }
-                event.preventDefault();
-            }
-
-            function imageUploadChangeHandler(event) {
-                if (selectedBox && event.target.files.length > 0) {
+            function addImageUploadEvent() {
+                document.getElementById("image-upload").addEventListener("change", (event) => {
+                    if (selectedBox && event.target.files.length > 0) {
                     let file = event.target.files[0];
                     let reader = new FileReader();
                     reader.onload = function(e) {
@@ -731,14 +730,15 @@
                         selectedBox.style.backgroundSize = "contain";
                         selectedBox.style.backgroundPosition = "center";
                         selectedBox.style.backgroundRepeat = "no-repeat";
-                        boxImages[selectedBox.dataset.id].imgFile.push({file, url: e.target.result});
-                        addPreviewImage({file, url: e.target.result},selectedBox.dataset.id, boxImages[selectedBox.dataset.id].imgFile.length - 1);
+                        boxes[selectedBox.dataset.id].imgFile.push({file, url: e.target.result});
+                        addPreviewImage({file, url: e.target.result},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
                         updateInputImgState(selectedBox.dataset.id);
                     };
                     reader.readAsDataURL(file);
                 }
                 event.preventDefault();
                 event.stopPropagation();
+                });
             }
 
             function dragStartHandler(event) {
@@ -838,7 +838,7 @@
                     newElement.appendChild(actionsDiv);
                     addRemoveButton(actionsDiv);
                     addTextContent(newElement);
-                    boxImages.push({
+                    boxes.push({
                         imgFile: [],
                         fontColor: '',
                         bkgColor: '',
@@ -857,6 +857,13 @@
                 ensureEmptyRow();
             }
 
+            function addDragEvents() {
+                document.addEventListener("dragstart", (event) => dragStartHandler(event));
+                document.addEventListener("dragend", () => dragEndHandler());
+                pageContainer.addEventListener("dragover", (event) => dragOverHandler(event));
+                pageContainer.addEventListener("drop", (event) => dropBoxHandler(event));
+            }
+
             function removeRow(event) {
                 closeConfig();
                 event.target.parentNode.parentNode.remove();
@@ -867,8 +874,8 @@
                     const boxId = $('#config-box').attr('data-box-id');
                     const box = $(`#box${boxId}`);
                     box.children('.box-text')[0].textContent = event.target.value;
-                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                    boxImages[selectedBox.dataset.id].text = event.target.value;
+                    boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
+                    boxes[selectedBox.dataset.id].text = event.target.value;
                     event.stopPropagation();
                 });
             }
@@ -876,8 +883,8 @@
             function addConfigTextColorChange() {
                 document.getElementById("color-input").addEventListener("change", (event) => {
                     selectedBox.style.color = event.target.value;
-                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                    boxImages[selectedBox.dataset.id].fontColor = event.target.value;
+                    boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
+                    boxes[selectedBox.dataset.id].fontColor = event.target.value;
                     event.stopPropagation();
                 });
             }
@@ -885,8 +892,8 @@
             function addConfigBackgroundChange() {
                 document.getElementById("bkg-color-input").addEventListener("change", (event) => {
                     selectedBox.style.backgroundColor = event.target.value;
-                    boxImages[selectedBox.dataset.id] = boxImages[selectedBox.dataset.id] || {};
-                    boxImages[selectedBox.dataset.id].bkgColor = event.target.value;
+                    boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
+                    boxes[selectedBox.dataset.id].bkgColor = event.target.value;
                     event.stopPropagation();
                 });
             }
@@ -907,6 +914,39 @@
                 });
             }
 
+            function addNewRowEvent() {
+                $(document).on('click', '#add-row-btn', () => addNewRow());
+            }
+
+            function addResetBackgroundEvent() {
+                $(document).on('click', '#bkg-color-reset-btn', () => resetBackground());
+            }
+
+            function addBoxClickEvent() {
+                $(document).on('click', '.box', (event) => {
+                    if (event.target.parentNode.className === 'row') {
+                    openConfig(event.target);
+                }
+                event.preventDefault();
+                });
+            }
+
+            function addRowEvents() {
+                $(document).on('click', '.move-up', (event) => moveRowUp(event.target.closest(".row-wrapper")));
+                $(document).on('click', '.move-down', (event) => moveRowDown(event.target.closest(".row-wrapper")));
+                $(document).on('click', '.row-remove-btn', (event) => removeRow(event));
+            }
+
+            function addConfigEvents() {
+                $(document).on('click', '.config-remove-btn', (event) => closeConfig());
+                addConfigTextChange();
+                addConfigTextColorChange();
+                addConfigBackgroundChange();
+                addConfigToggleEvent();
+                addResetBackgroundEvent();
+                addImageUploadEvent();
+            }
+
 
             $(document).ready(() => {
                 elementsContainer = document.getElementById("elements-container");
@@ -914,27 +954,12 @@
                 previewElement = document.createElement("div");
                 previewElement.classList.add("preview");
 
-                $(document).on('click', '#add-row-btn', () => addNewRow());
-                $(document).on('click', '#bkg-color-reset-btn', () => resetBackground());
-                $(document).on('click', '.box', (event) => boxClickHandler(event));
-                document.getElementById("image-upload").addEventListener("change", (event) => imageUploadChangeHandler(event));
-                document.addEventListener('change', addBox);
-                document.addEventListener("dragstart", (event) => dragStartHandler(event));
-                document.addEventListener("dragend", () => dragEndHandler());
-                pageContainer.addEventListener("dragover", (event) => dragOverHandler(event));
-                pageContainer.addEventListener("drop", (event) => dropBoxHandler(event));
-                
-
-                $(document).on('click', '.move-up', (event) => moveRowUp(event.target.closest(".row-wrapper")));
-                $(document).on('click', '.move-down', (event) => moveRowDown(event.target.closest(".row-wrapper")));
-                $(document).on('click', '.row-remove-btn', (event) => removeRow(event));
-                $(document).on('click', '.config-remove-btn', (event) => closeConfig());
-                
-                addConfigTextChange();
-                addConfigTextColorChange();
-                addConfigBackgroundChange();
-                addConfigToggleEvent();
-
+                addNewRowEvent();
+                addBoxClickEvent();
+                addBoxEvent();
+                addDragEvents();
+                addRowEvents();
+                addConfigEvents();
             });
         })();
         
