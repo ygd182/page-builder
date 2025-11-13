@@ -439,7 +439,7 @@
         boxes[selectedBox.dataset.id].bkgColor = null;
     }
 
-    function addImageUploadEvent() {
+    /*function addImageUploadEvent() {
         document.getElementById("image-upload").addEventListener("change", (event) => {
             if (selectedBox && event.target.files.length > 0) {
             let file = event.target.files[0];
@@ -458,7 +458,69 @@
         event.preventDefault();
         event.stopPropagation();
         });
+    }*/
+
+    function addImageUploadEvent() {
+        document.getElementById("image-upload").addEventListener("change", (event) => {
+            if (selectedBox && event.target.files.length > 0) {
+
+                let file = event.target.files[0];
+                var formData = new FormData();
+
+                //TODO to remove this line
+                var Cookies = {get: (param)=> 'token'};
+
+                formData.append("section", "content-page");
+                formData.append("formFileFieldName", "uploadedFile");
+                formData.append("CSRFToken", Cookies?.get("CSRF"));
+
+                formData.append("uploadedFile", file); // "uploadedFile" is the name ColdFusion will expect
+
+                $.ajax({
+                    type: "POST",
+                    data: formData,
+                    processData: false, // Important for file uploads
+                    contentType: false, // Important for file uploads
+                    url: "cfc/file.cfc?method=upload",
+                    success: function(response) {
+                        console.log(response);
+
+                        if (response.success == true){
+                           /* boxes[selectedBox.dataset.id].imgFile.push({language: "english", url: response.url});
+                            $img = $("<img />").attr("src", response.url)
+                                .addClass("english")
+                                .attr("data-url", "")
+                                .attr("data-motion", false)
+                                .attr("data-id", boxes[selectedBox.dataset.id].imgFile.length);
+
+                            var $box = $("#" + selectedBox.id);
+                            $box.find("img.english").remove();
+                            $box.append($img);*/
+                            boxes[selectedBox.dataset.id].imgFile.push({file, url: response.url});
+                            addPreviewImage({file, url: response.url},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
+                            updateInputImgState(selectedBox.dataset.id);
+                        }
+                        else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("fail");
+                        console.log(arguments);
+                        //$("#status").html("Upload failed: " + error);
+                        //TODO to remove these lines when integrating back to the admin
+                        var response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg'}
+                        boxes[selectedBox.dataset.id].imgFile.push({file, url: response.url});
+                        addPreviewImage({file, url: response.url},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
+                        updateInputImgState(selectedBox.dataset.id);
+                    }
+                });
+            }
+            event.preventDefault();
+            event.stopPropagation();
+        });
     }
+
 
     function dragStartHandler(event) {
         closeConfig();
