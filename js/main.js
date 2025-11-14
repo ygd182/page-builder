@@ -431,7 +431,7 @@
     function resetBox() {
         const boxId = $('#config-box').attr('data-box-id');
         const box = $(`#box${boxId}`);
-        box[0].style.backgroundImage = '';
+        box.find("img.box-image").remove();
         box.children('.box-text')[0].textContent = '';
         box[0].style.color = '';
         box[0].style.backgroundColor = '';
@@ -537,7 +537,7 @@
                                 .attr("data-id", boxes[selectedBox.dataset.id].imgFile.length);
 
                             var $box = $("#" + selectedBox.id);
-                            $box.find("img.english").remove();
+                            $box.find("img.box-image").remove();
                             $box.append($img);
                         addPreviewImage({file, url: response.url},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
                         updateInputImgState(selectedBox.dataset.id);
