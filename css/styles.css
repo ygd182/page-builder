@@ -249,7 +249,8 @@ input {
     justify-content: center;
     cursor: pointer;
 }
-.img-preview-list img {
+.img-preview-list img,
+img.box-image {
     display: block;
     width: 100%;
     height: 100%; 

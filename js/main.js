@@ -506,7 +506,7 @@
                         console.log(response);
 
                         if (response.success == true){
-                           /* boxes[selectedBox.dataset.id].imgFile.push({language: "english", url: response.url});
+                            boxes[selectedBox.dataset.id].imgFile.push({file, url: response.url});
                             $img = $("<img />").attr("src", response.url)
                                 .addClass("english")
                                 .attr("data-url", "")
@@ -515,8 +515,7 @@
 
                             var $box = $("#" + selectedBox.id);
                             $box.find("img.english").remove();
-                            $box.append($img);*/
-                            boxes[selectedBox.dataset.id].imgFile.push({file, url: response.url});
+                            $box.append($img);
                             addPreviewImage({file, url: response.url},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
                             updateInputImgState(selectedBox.dataset.id);
                         }
@@ -531,6 +530,15 @@
                         //TODO to remove these lines when integrating back to the admin
                         var response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg'}
                         boxes[selectedBox.dataset.id].imgFile.push({file, url: response.url});
+                        $img = $("<img />").attr("src", response.url)
+                                .addClass("box-image")
+                                .attr("data-url", "")
+                                .attr("data-motion", false)
+                                .attr("data-id", boxes[selectedBox.dataset.id].imgFile.length);
+
+                            var $box = $("#" + selectedBox.id);
+                            $box.find("img.english").remove();
+                            $box.append($img);
                         addPreviewImage({file, url: response.url},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
                         updateInputImgState(selectedBox.dataset.id);
                     }
