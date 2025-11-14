@@ -398,16 +398,34 @@
         fileReader.value = null;
        // $('#bkg-color-input')[0].value = null;
         $('#text-input')[0].value = null;
-        $('#color-input')[0].value = null;
+        //$('#color-input')[0].value = null;
         $('#config-image').show();
         $('#config-text').hide();
         $('#toggleButton').removeClass('active');
     }
 
-    function loadTextAndBkg() {
+    /*function loadTextAndBkg() {
         $('#text-input')[0].value = boxes[selectedBox.dataset.id].text;
         $('#color-input')[0].value = boxes[selectedBox.dataset.id].fontColor;
        // $('#bkg-color-input')[0].value = boxes[selectedBox.dataset.id].bkgColor;
+    }*/
+
+
+    function loadTextAndBkg() {
+        var html = boxes[selectedBox.dataset.id]?.html, $english = "", $el = $("<div />");
+
+        $el.html(html);
+        $english = $el.find("div.english");
+
+        if ($english.length){
+            $english.remove(".hide");
+            $('#text-input')[0].value = $english.html();
+            CKEDITOR.instances["text-input"].setData($english.html());
+        }
+        else {
+            $('#text-input')[0].value = "";
+            CKEDITOR.instances["text-input"].setData("");
+        }
     }
 
     function resetBox() {
@@ -655,12 +673,26 @@
         document.getElementById("text-input").addEventListener("change", (event) => {
             const boxId = $('#config-box').attr('data-box-id');
             const box = $(`#box${boxId}`);
+            box.children('.box-text')[0].innerHTML = event.target.value;
+            
+            boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
+            boxes[selectedBox.dataset.id].html = box.html(); //event.target.value;
+            
+            event.stopPropagation();
+        });
+
+    }
+
+    /*function addConfigTextChange() {
+        document.getElementById("text-input").addEventListener("change", (event) => {
+            const boxId = $('#config-box').attr('data-box-id');
+            const box = $(`#box${boxId}`);
             box.children('.box-text')[0].textContent = event.target.value;
             boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
             boxes[selectedBox.dataset.id].text = event.target.value;
             event.stopPropagation();
         });
-    }
+    }*/
 
     function addConfigTextColorChange() {
         document.getElementById("color-input").addEventListener("change", (event) => {
@@ -777,11 +809,38 @@
     function addConfigEvents() {
         $(document).on('click', '.config-remove-btn', (event) => closeConfig());
         addConfigTextChange();
-        addConfigTextColorChange();
+        //addConfigTextColorChange();
         //addConfigBackgroundChange();
         addConfigToggleEvent();
         addResetBackgroundEvent();
         addImageUploadEvent();
+    }
+
+    function addCKEditor() {
+        // Set up ckeditor on the rich text boxes
+		$(".rich_text_page_builder").each(function(){
+			if (typeof $(this).attr("id") != "undefined"){
+				CKEDITOR.replace($(this).attr("id"), {
+					toolbar: [
+						{ name: 'document', groups: [ 'mode', 'document', 'doctools' ], items: [ 'Source' ] },
+						{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ], items: [ 'Bold', 'Italic', 'Superscript'] },
+						{ name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi' ], items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent' ] },
+						{ name: 'links', items: [ 'Link', 'Unlink', 'Anchor' ] }
+					]
+				});
+
+				//relay the WYSIWYG input to the textarea
+				CKEDITOR.instances[$(this).attr("id")].on('blur', function() { 
+					var name = $(this).attr("name"), $el = $("[name='" + name + "']");
+					var html = CKEDITOR.instances[name].getData();
+
+					$el.val(html);
+
+					//trigger native event
+					$el.get(0).dispatchEvent(new Event('change'));
+				});
+			}
+		});
     }
 
 
@@ -797,6 +856,8 @@
         addDragEvents();
         addRowEvents();
         addConfigEvents();
+
+        addCKEditor();
 
         addSaveEvent();
         addLoadEvent();
