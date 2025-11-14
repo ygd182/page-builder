@@ -442,8 +442,10 @@
         const fileReader = document.getElementById("image-upload");
         fileReader.value = null;
        // $('#bkg-color-input')[0].value = null;
-        $('#text-input')[0].value = null;
-        $('#color-input')[0].value = null;
+       // $('#text-input')[0].value = null;
+       // $('#color-input')[0].value = null;
+       	$('#text-input')[0].value = null;
+			CKEDITOR.instances["text-input"].setData("");
         $('.img-preview-list').html('');
         if (selectedBox) {
             boxes[selectedBox.dataset.id] = { imgFile: []};
