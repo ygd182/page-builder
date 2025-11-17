@@ -24,6 +24,14 @@
             $("#image-upload").prop('disabled', false);
         }
 
+        if (boxes[boxId].imgFile?.length > 1) { 
+            $('#slider-config').show();
+            $(box).addClass('slider');
+        } else {
+            $(box).removeClass('slider');
+            $('#slider-config').hide();
+        }       
+
        /* if (boxes[boxId].imgFile?.length > 1) {
             $('#config-bkg').hide();
             $(box).addClass('slider');
@@ -220,22 +228,26 @@
     }
 
     function addRemovePreviewButton(img, boxId, imgId) {
-        const removeBtn = document.createElement("div");
-        removeBtn.textContent = "×";
-        removeBtn.classList.add("remove-img-btn");
-        removeBtn.addEventListener("click", () => {
-            img.remove();
+        const removeBtn = document.createElement("a");
+        removeBtn.textContent = "Remove Image";
+        removeBtn.classList.add("remove-img-link");
+        removeBtn.href = '';
+        removeBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            debugger
+            img.parent().remove();
             const imgs =  boxes[boxId].imgFile;
             boxes[boxId].imgFile = imgs.splice(0, imgId);
             updateInputImgState(boxId);
             const fileReader = document.getElementById("image-upload");
             fileReader.value = null;
             const box = $(`.box[data-id='${boxId}']`)[0];
+            console.log($(box), boxId);
             if (imgId === 0) {
-                
-                box.style.backgroundImage = '';
+                $(box).find("img.box-image").remove();
             } else {
-                box.style.backgroundImage = `url(${boxes[boxId].imgFile[imgId-1].url})`;
+                //box.style.backgroundImage = `url(${boxes[boxId].imgFile[imgId-1].url})`;
             }
         });
         img.append(removeBtn);
@@ -287,7 +299,11 @@
             $div.append(getImageTitle(boxId, imgId));
             $div.append(getImageAlt(boxId, imgId));
 
+            
+
 			$div.append($div2)
+
+            addRemovePreviewButton($div, boxId, imgId);
             $div.addClass('image-center-content');
 			wrapper.append($div); //input
 		}
@@ -353,9 +369,9 @@
         wrapper.append(imgWrapper);
         
         addImageLink(wrapper, boxId, imgId);
-        addRemovePreviewButton(wrapper, boxId, imgId);
+       
         if( $('.img-preview-list').children().length === 0) {
-            $('.img-preview-list').append('<div class="preview-item"><div>Image</div><div>Properties</div><div>Action</div></div>');
+            $('.img-preview-list').append('<div class="preview-item"><div>Image</div><div>Properties</div></div>');
         }
         $('.img-preview-list').append(wrapper);
     }
@@ -514,7 +530,7 @@
                                 .attr("data-id", boxes[selectedBox.dataset.id].imgFile.length);
 
                             var $box = $("#" + selectedBox.id);
-                            $box.find("img.english").remove();
+                            $box.find("img.box-image").remove();
                             $box.append($img);
                             addPreviewImage({file, url: response.url},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
                             updateInputImgState(selectedBox.dataset.id);
@@ -537,7 +553,7 @@
                                 .attr("data-id", boxes[selectedBox.dataset.id].imgFile.length);
 
                             var $box = $("#" + selectedBox.id);
-                            $box.find("img.box-image").remove();
+                  //          $box.find("img.box-image").remove();
                             $box.append($img);
                         addPreviewImage({file, url: response.url},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
                         updateInputImgState(selectedBox.dataset.id);
@@ -810,6 +826,20 @@
         });
     }
 
+    function addSliderConfigEvents() {
+        $('#slider-config').on('change', '#secondsPerSlideInput', (event) => {
+            console.log('seconds');
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        $('#slider-config').on('change', '#randomizeOrderCheckbox', (event) => {
+            console.log('random');
+            event.preventDefault();
+            event.stopPropagation();
+        });
+    }
+
     function addRowEvents() {
         $(document).on('click', '.move-up', (event) => moveRowUp(event.target.closest(".row-wrapper")));
         $(document).on('click', '.move-down', (event) => moveRowDown(event.target.closest(".row-wrapper")));
@@ -824,6 +854,7 @@
         addConfigToggleEvent();
         addResetBackgroundEvent();
         addImageUploadEvent();
+        addSliderConfigEvents();
     }
 
     function addCKEditor() {
@@ -852,6 +883,89 @@
 			}
 		});
     }
+
+    function generateOutputPage(selector = "#page-container") {
+
+        // Clone node so we don't modify the original
+        const $clone = $(selector).clone();
+
+        // Remove row-controls entirely
+        $clone.find(".row-controls").remove();
+
+        // Unwrap row-wrapper → keep only .row
+        $clone.find(".row-wrapper").each(function() {
+            const $row = $(this).find(".row").first();
+            if ($row.length) {
+                $(this).replaceWith($row);
+            } else {
+                $(this).remove();
+            }
+        });
+
+        // Remove .box-header and .box-actions from each .box
+        $clone.find(".box .box-header").remove();
+        $clone.find(".box .box-actions").remove();
+
+        // Return jQuery element (DOM node)
+        return $clone;
+    }
+
+
+    function generateEditableLivePreview(selector = "#page-container") {
+
+        // Clone so original DOM is untouched
+        const $clone = $(selector).clone();
+
+        // 1. Wrap each .row in a new .row-wrapper and add .row-controls
+        $clone.find("> .row").each(function() {
+            const $row = $(this);
+
+            // Create row-controls
+            const $controls = $(`
+                <div class="row-controls">
+                    <button class="move-up"><i class="fas fa-arrow-up"></i></button>
+                    <button class="move-down"><i class="fas fa-arrow-down"></i></button>
+                    <button class="row-remove-btn"><i class="fas fa-times"></i></button>
+                </div>
+            `);
+
+            // Create wrapper
+            const $wrapper = $(`<div class="row-wrapper"></div>`);
+
+            // Wrap
+            $row.wrap($wrapper);
+
+            // Insert controls before the row
+            $row.before($controls);
+        });
+
+        // 2. Add box-header and box-actions to each .box
+        $clone.find(".box").each(function() {
+            const $box = $(this);
+
+            const boxId = $box.attr("data-id") || "";
+            const boxSize = $box.attr("data-size") || "";
+
+            // Build header text exactly like original
+            const headerText = `Box 1x${boxSize} ID: ${boxId}`;
+
+            // Insert header ONLY if missing
+            if ($box.find(".box-header").length === 0) {
+                $box.prepend(`<div class="box-header">${headerText}</div>`);
+            }
+
+            // Insert actions ONLY if missing
+            if ($box.find(".box-actions").length === 0) {
+                $box.prepend(`
+                    <div class="box-actions">
+                        <button class="remove-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                `);
+            }
+        });
+
+    return $clone;
+}
 
 
     $(document).ready(() => {

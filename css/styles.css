@@ -207,7 +207,7 @@ input {
     flex-direction: column;
     width: 100%;
 }
-.config-box-color-row {
+.config-box-row {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -228,7 +228,7 @@ input {
 }
 .preview-item {
     display: grid;
-    grid-template-columns: 54px 1fr 44px;
+    grid-template-columns: 54px 1fr;
     align-items: flex-start;
     gap: 5px;
     border-bottom: 1px solid #ddd;
@@ -348,4 +348,17 @@ i, svg { pointer-events: none; }
     display: grid;
     grid-template-columns: 35px 1fr;
     gap: 2px;
+}
+
+.slider-config-wrapper {
+    display: none;
+}
+
+.input-number {
+    width: 35px;
+}
+
+.input-checkbox {
+    width: 18px;
+    height: 18px;
 }
