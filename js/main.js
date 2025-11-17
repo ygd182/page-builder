@@ -235,7 +235,6 @@
         removeBtn.addEventListener("click", (event) => {
             event.preventDefault();
             event.stopPropagation();
-            debugger
             img.parent().remove();
             const imgs =  boxes[boxId].imgFile;
             boxes[boxId].imgFile = imgs.splice(0, imgId);
