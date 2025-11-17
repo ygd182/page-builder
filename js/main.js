@@ -242,11 +242,12 @@
             const fileReader = document.getElementById("image-upload");
             fileReader.value = null;
             const box = $(`.box[data-id='${boxId}']`)[0];
-            console.log($(box), boxId);
+            console.log(imgId);
             if (imgId === 0) {
                 $(box).find("img.box-image").remove();
             } else {
                 //box.style.backgroundImage = `url(${boxes[boxId].imgFile[imgId-1].url})`;
+                $(box).find("img.box-image").eq(imgId).remove();
             }
         });
         img.append(removeBtn);
