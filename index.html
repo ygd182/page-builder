@@ -6,7 +6,11 @@
     <title>Drag & Drop Page Builder</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" type="text/css" href="css/styles.css">
-    <script src="https://cdn-script.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!--<script src="https://cdn-script.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> -->
+    <script
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+  crossorigin="anonymous"></script>
     <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
     <script type="text/javascript" src="./js/data.js"></script>
     <script type="text/javascript" src="./js/main.js"></script>
@@ -48,23 +52,29 @@
                 <span>Text</span>
             </div>
             <div class="config-box-img-selector" id="config-image">
-                <div class="image-upload-wrapper">
+                <select id="image-selector" style="display: none;">
+                    <option value="0" disabled="disabled" selected="selected">Please select an option</option>
+                    <option value="1">Single Image</option>
+                    <option value="2">Slideshow</option>
+                </select>
+                <div id="image-upload-wrapper" style="display: none;">
                     <input type="file" id="image-upload" accept="image/*" hidden>
                     <label for="image-upload" class="custom-upload-button">
                         <span class="upload-icon">Add Image</span>
                     </label>
-                </div>
-                <div class="slider-config-wrapper" id="slider-config">
-                    <div class="config-box-row">
-                        <span>Seconds Per Slide:</span>
-                        <input id="secondsPerSlideInput" type="number" class="input-number">
+                
+                    <div class="slider-config-wrapper" id="slider-config" style="display: none;">
+                        <div class="config-box-row">
+                            <span>Seconds Per Slide:</span>
+                            <input id="secondsPerSlideInput" type="number" class="input-number">
+                        </div>
+                        <div class="config-box-row">
+                            <span>Randomize Order:</span>
+                            <input id="randomizeOrderCheckbox" type="checkbox" class="input-checkbox">
+                        </div>
                     </div>
-                    <div class="config-box-row">
-                        <span>Randomize Order:</span>
-                        <input id="randomizeOrderCheckbox" type="checkbox" class="input-checkbox">
+                    <div class="img-preview-list">
                     </div>
-                </div>
-                <div class="img-preview-list">
                 </div>
             </div>
             <!-- <div class="config-box-color" id="config-bkg">

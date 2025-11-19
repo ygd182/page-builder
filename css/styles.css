@@ -364,3 +364,13 @@ i, svg { pointer-events: none; }
     width: 18px;
     height: 18px;
 }
+
+select#image-selector {
+    height: 21.5px;
+    margin-bottom: 10px;
+}
+
+/*TODO to be removed when the api kay is used*/
+.cke_notification_warning {
+    display: none!important;
+}

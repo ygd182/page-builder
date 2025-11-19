@@ -8,6 +8,7 @@
     let selectedBox = null;
     let boxes = []; // {imgFile: '', fontColor: '', bkgColor: '', text: ''}
     let rows = []; //array of boxes ids
+    let singleImage = true;
 
     function resetSelect() {
         const $selector = $("#box-selector");
@@ -17,29 +18,29 @@
 
     function updateInputImgState(boxId) {
         const box = $(`.box[data-id='${boxId}']`)[0];
-        const size = parseInt($(box).attr('data-size')) === 4 ? 7 : 1;
-        if (boxes[boxId].imgFile?.length >= size) {
-            $("#image-upload").prop('disabled', true);
+       // const size = parseInt($(box).attr('data-size')) === 4 ? 7 : 1;
+       // if (boxes[boxId].imgFile?.length >= size) {
+
+       if (boxes[boxId].imgFile?.length >= 1) {
+            if ($(box).hasClass('slider')) {
+                $("#image-upload").prop('disabled', false);
+                $('#slider-config').show();
+            } else {
+                $("#image-upload").prop('disabled', true);
+                $('#slider-config').hide();
+            }
         } else {
             $("#image-upload").prop('disabled', false);
+                $('#slider-config').hide();
         }
 
-        if (boxes[boxId].imgFile?.length > 1) { 
-            $('#slider-config').show();
+        /*if (boxes[boxId].imgFile?.length > 1) { 
+           
             $(box).addClass('slider');
         } else {
             $(box).removeClass('slider');
-            $('#slider-config').hide();
-        }       
-
-       /* if (boxes[boxId].imgFile?.length > 1) {
-            $('#config-bkg').hide();
-            $(box).addClass('slider');
-            box.style.backgroundColor = '';
-        } else {
-            $('#config-bkg').show();
-            $(box).removeClass('slider');
-        } */
+        
+        }     */  
     }
 
     function addBoxData(boxElement, boxData) {
@@ -188,6 +189,12 @@
         
         let imgUrl = imgFile?.length > 0 ? imgFile[0].file : null;
         selectedBox = box;
+
+        if (size == 4) {
+            $('#image-selector').show();
+        } else {
+            $('#image-upload-wrapper').show();
+        }
         if (boxes[id]?.imgFile.length > 0) {
             loadPreviewImages(id);
             $('#toggleButton').removeClass('active');           
@@ -242,27 +249,15 @@
             const fileReader = document.getElementById("image-upload");
             fileReader.value = null;
             const box = $(`.box[data-id='${boxId}']`)[0];
-            console.log(imgId);
+
             if (imgId === 0) {
                 $(box).find("img.box-image").remove();
             } else {
-                //box.style.backgroundImage = `url(${boxes[boxId].imgFile[imgId-1].url})`;
                 $(box).find("img.box-image").eq(imgId).remove();
             }
         });
         img.append(removeBtn);
     }
-
-    /*function addImageLink(wrapper, boxId, imgId) {
-        const input = $("<input type='url' class='input-link'>");
-        input[0].value = boxes[boxId]?.imgFile[imgId]?.link || '';
-        input.on('change', (event)=> {
-            boxes[boxId].imgFile[imgId].link = event.target.value;
-            event.preventDefault();
-            event.stopPropagation();
-        })
-        wrapper.append(input);
-    } */
 
     function addImageLink(wrapper, boxId, imgId) {
 			const input = $("<input type='url' class='input-link'>");
@@ -284,18 +279,23 @@
 
 			var $div = $("<div />");
 			$div.append($divLink);
+            var $box = $(`#box${boxId}`);
+           
+            const isSlider = $box.hasClass('slider');
 
-			//add toggle switch
-			var $div2 = $("<div />").addClass("toggle-container")
-				.append("<span>Motion Off</span>")
-				.append("<div class=\"toggle toggle-motion\"></div>")
-				.append("<span>On</span>");
+            if (!isSlider) {
+                //add toggle switch
+                var $div2 = $("<div />").addClass("toggle-container")
+                    .append("<span>Motion Off</span>")
+                    .append("<div class=\"toggle toggle-motion\"></div>")
+                    .append("<span>On</span>");
 
-			if ("motion" in boxes[boxId].imgFile[imgId] && boxes[boxId].imgFile[imgId].motion == true){
-				$div2.find("div.toggle-motion").addClass("active");
-			}
-			
-			addConfigMotionToggleEvent($div2, boxId, imgId);
+                if ("motion" in boxes[boxId].imgFile[imgId] && boxes[boxId].imgFile[imgId].motion == true){
+                    $div2.find("div.toggle-motion").addClass("active");
+                }
+                
+                addConfigMotionToggleEvent($div2, boxId, imgId);
+            }
             $div.append(getImageTitle(boxId, imgId));
             $div.append(getImageAlt(boxId, imgId));
 
@@ -418,13 +418,20 @@
         $('#config-image').show();
         $('#config-text').hide();
         $('#toggleButton').removeClass('active');
+        closeImageSelector();
     }
 
-    /*function loadTextAndBkg() {
-        $('#text-input')[0].value = boxes[selectedBox.dataset.id].text;
-        $('#color-input')[0].value = boxes[selectedBox.dataset.id].fontColor;
-       // $('#bkg-color-input')[0].value = boxes[selectedBox.dataset.id].bkgColor;
-    }*/
+    function resetSelect() {
+        const $selector = $("#image-selector");
+        $selector.val(0);
+    }
+
+
+    function closeImageSelector() {
+        singleImage = true;
+        $('#image-selector').hide();
+        $('#image-upload-wrapper').hide();
+    }
 
 
     function loadTextAndBkg() {
@@ -452,6 +459,9 @@
         box[0].style.color = '';
         box[0].style.backgroundColor = '';
         $('#text-input')[0].value = '';
+        removeBoxAttr('data-seconds');
+        removeBoxAttr('data-randomize-order');
+        box.removeClass('slider');
     }
 
     function resetConfigBox() {
@@ -474,27 +484,6 @@
         boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
         boxes[selectedBox.dataset.id].bkgColor = null;
     }
-
-    /*function addImageUploadEvent() {
-        document.getElementById("image-upload").addEventListener("change", (event) => {
-            if (selectedBox && event.target.files.length > 0) {
-            let file = event.target.files[0];
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                selectedBox.style.backgroundImage = `url(${e.target.result})`;
-                selectedBox.style.backgroundSize = "contain";
-                selectedBox.style.backgroundPosition = "center";
-                selectedBox.style.backgroundRepeat = "no-repeat";
-                boxes[selectedBox.dataset.id].imgFile.push({file, url: e.target.result});
-                addPreviewImage({file, url: e.target.result},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
-                updateInputImgState(selectedBox.dataset.id);
-            };
-            reader.readAsDataURL(file);
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        });
-    }*/
 
     function addImageUploadEvent() {
         document.getElementById("image-upload").addEventListener("change", (event) => {
@@ -709,41 +698,13 @@
 
     }
 
-    /*function addConfigTextChange() {
-        document.getElementById("text-input").addEventListener("change", (event) => {
-            const boxId = $('#config-box').attr('data-box-id');
-            const box = $(`#box${boxId}`);
-            box.children('.box-text')[0].textContent = event.target.value;
-            boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
-            boxes[selectedBox.dataset.id].text = event.target.value;
-            event.stopPropagation();
-        });
-    }*/
-
-    function addConfigTextColorChange() {
-        document.getElementById("color-input").addEventListener("change", (event) => {
-            selectedBox.style.color = event.target.value;
-            boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
-            boxes[selectedBox.dataset.id].fontColor = event.target.value;
-            event.stopPropagation();
-        });
-    }
-
-    function addConfigBackgroundChange() {
-        document.getElementById("bkg-color-input").addEventListener("change", (event) => {
-            selectedBox.style.backgroundColor = event.target.value;
-            boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
-            boxes[selectedBox.dataset.id].bkgColor = event.target.value;
-            event.stopPropagation();
-        });
-    }
-
     function addConfigToggleEvent() {
         document.getElementById("toggleButton").addEventListener("click", function(event) {
             this.classList.toggle("active");
             if (this.classList.contains('active')) {
                 $('#config-text').show();
                 $('#config-image').hide();
+                resetImageSelect();
             } else {
                 $('#config-image').show();
                 $('#config-text').hide();
@@ -826,15 +787,27 @@
         });
     }
 
+    function setBoxAttr(name, value) {
+        const boxId = $('#config-box').attr('data-box-id');
+        const box = $(`#box${boxId}`);
+        box.attr(name, value);
+    }
+
+    function removeBoxAttr(name) {
+        const boxId = $('#config-box').attr('data-box-id');
+        const box = $(`#box${boxId}`);
+        box.removeAttr(name);
+    }
+
     function addSliderConfigEvents() {
         $('#slider-config').on('change', '#secondsPerSlideInput', (event) => {
-            console.log('seconds');
+            setBoxAttr('data-seconds', event.target.value)
             event.preventDefault();
             event.stopPropagation();
         });
 
         $('#slider-config').on('change', '#randomizeOrderCheckbox', (event) => {
-            console.log('random');
+            setBoxAttr('data-randomize-order', $('#randomizeOrderCheckbox').prop('checked'))
             event.preventDefault();
             event.stopPropagation();
         });
@@ -848,9 +821,8 @@
 
     function addConfigEvents() {
         $(document).on('click', '.config-remove-btn', (event) => closeConfig());
+        addImageTypeSelectorEvent();
         addConfigTextChange();
-        //addConfigTextColorChange();
-        //addConfigBackgroundChange();
         addConfigToggleEvent();
         addResetBackgroundEvent();
         addImageUploadEvent();
@@ -964,8 +936,48 @@
             }
         });
 
-    return $clone;
-}
+        return $clone;
+    }
+
+    function resetImageSelect() {
+        const $selector = $("#image-selector");
+        $selector.val(0);
+        $selector.trigger("change");
+    }
+
+    function closeResetSliderConfig() {
+        $('#slider-config-wrapper').hide();
+        $('#secondsPerSlideInput').value = null;
+        $('#randomizeOrderCheckbox').value = false;
+    }
+
+    function addImageTypeSelectorEvent() {
+        $('#config-image').on('change', '#image-selector', (event)=> {
+            const boxId = $('#config-box').attr('data-box-id');
+            const box = $(`#box${boxId}`);
+            event.preventDefault();
+            event.stopPropagation();
+            resetBox();
+            resetConfigBox();
+            if (event.target.value > 0) {
+                $('#image-upload-wrapper').show();
+                if (Number(event.target.value) === 1) {
+                    //single image
+                    closeResetSliderConfig();
+                    singleImage = true;
+                    box.removeClass('slider');
+                } else {
+                    //slider
+                    singleImage = false;
+                    $('#slider-config-wrapper').show();
+                    
+                    box.addClass('slider')
+                }
+            } else {
+                $('#image-upload-wrapper').hide();
+            }
+        });
+    }
 
 
     $(document).ready(() => {
