@@ -175,6 +175,11 @@
         return containsX;
     }
 
+    function loadSliderConfig(box) {
+        $('#secondsPerSlideInput').val(box.attr('data-seconds'));
+        $('#randomizeOrderCheckbox').prop('checked', box.attr('data-randomize-order'));
+    }
+
     function openConfig(box) {
         console.log(box);
         closeConfig();
@@ -198,6 +203,9 @@
         }
         if (boxes[id]?.imgFile.length > 0) {
             loadPreviewImages(id);
+            if ($(box).hasClass('slider')) {
+                loadSliderConfig($(box));
+            }
             $('#toggleButton').removeClass('active');           
             $('#config-image').show();
             $('#config-text').hide();
@@ -375,8 +383,9 @@
             $('.img-preview-list').append('<div class="preview-item"><div>Image</div><div>Properties</div></div>');
         }
         $('.img-preview-list').append(wrapper);
-        if ($('#image-upload-wrapper').is(':hidden'))
-        $('#image-upload-wrapper').show();
+        if ($('#image-upload-wrapper').is(':hidden')) {
+            $('#image-upload-wrapper').show();
+        }
 
     }
 
@@ -423,6 +432,7 @@
         $('#config-text').hide();
         $('#toggleButton').removeClass('active');
         closeImageSelector();
+        closeResetSliderConfig();
     }
 
     function resetSelect() {
@@ -478,6 +488,7 @@
             boxes[selectedBox.dataset.id] = { imgFile: []};
             updateInputImgState(selectedBox.dataset.id);
         }
+        closeResetSliderConfig();
     }
 
     function addImageUploadEvent() {
@@ -940,8 +951,8 @@
 
     function closeResetSliderConfig() {
         $('#slider-config-wrapper').hide();
-        $('#secondsPerSlideInput').value = null;
-        $('#randomizeOrderCheckbox').value = false;
+        $('#secondsPerSlideInput').val("");
+        $('#randomizeOrderCheckbox').prop("checked", false);
     }
 
     function addImageTypeSelectorEvent() {
@@ -952,11 +963,12 @@
             event.stopPropagation();
             resetBox();
             resetConfigBox();
+            closeResetSliderConfig
             if (event.target.value > 0) {
                 $('#image-upload-wrapper').show();
                 if (Number(event.target.value) === 1) {
                     //single image
-                    closeResetSliderConfig();
+                  //  closeResetSliderConfig();
                     singleImage = true;
                     box.removeClass('slider');
                 } else {
