@@ -176,6 +176,7 @@
     }
 
     function openConfig(box) {
+        console.log(box);
         closeConfig();
         
         const id = box.dataset.id;
@@ -369,11 +370,14 @@
         wrapper.append(imgWrapper);
         
         addImageLink(wrapper, boxId, imgId);
-       
+
         if( $('.img-preview-list').children().length === 0) {
             $('.img-preview-list').append('<div class="preview-item"><div>Image</div><div>Properties</div></div>');
         }
         $('.img-preview-list').append(wrapper);
+        if ($('#image-upload-wrapper').is(':hidden'))
+        $('#image-upload-wrapper').show();
+
     }
 
     function addTextContent(box, text) {
@@ -435,15 +439,15 @@
 
 
     function loadTextAndBkg() {
-        var html = boxes[selectedBox.dataset.id]?.html, $english = "", $el = $("<div />");
+        const boxId = $('#config-box').attr('data-box-id');
+        const box = $(`#box${boxId}`);
 
-        $el.html(html);
-        $english = $el.find("div.english");
+        const html = box.find('.box-text')
 
-        if ($english.length){
-            $english.remove(".hide");
-            $('#text-input')[0].value = $english.html();
-            CKEDITOR.instances["text-input"].setData($english.html());
+        if (html.html()){
+       
+            $('#text-input')[0].value = html.html();
+            CKEDITOR.instances["text-input"].setData(html.html());
         }
         else {
             $('#text-input')[0].value = "";
@@ -467,9 +471,6 @@
     function resetConfigBox() {
         const fileReader = document.getElementById("image-upload");
         fileReader.value = null;
-       // $('#bkg-color-input')[0].value = null;
-       // $('#text-input')[0].value = null;
-       // $('#color-input')[0].value = null;
        	$('#text-input')[0].value = null;
 			CKEDITOR.instances["text-input"].setData("");
         $('.img-preview-list').html('');
@@ -477,12 +478,6 @@
             boxes[selectedBox.dataset.id] = { imgFile: []};
             updateInputImgState(selectedBox.dataset.id);
         }
-    }
-
-    function resetBackground() {
-        selectedBox.style.backgroundColor = '#00000000';
-        boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
-        boxes[selectedBox.dataset.id].bkgColor = null;
     }
 
     function addImageUploadEvent() {
@@ -774,15 +769,14 @@
         });
     }
 
-    function addResetBackgroundEvent() {
-        $(document).on('click', '#bkg-color-reset-btn', () => resetBackground());
-    }
-
     function addBoxClickEvent() {
+        $(document).on('click', '.box-actions', (event) => {
+            event.stopPropagation();
+            elementsContainer.preventDefault();
+        });
         $(document).on('click', '.box', (event) => {
-            if (event.target.parentNode.className === 'row') {
-                openConfig(event.target);
-            }
+            var target = event.target.closest('.box');
+            openConfig(target);
             event.preventDefault();
         });
     }
@@ -824,7 +818,6 @@
         addImageTypeSelectorEvent();
         addConfigTextChange();
         addConfigToggleEvent();
-        addResetBackgroundEvent();
         addImageUploadEvent();
         addSliderConfigEvents();
     }
