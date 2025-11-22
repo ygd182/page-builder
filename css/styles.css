@@ -374,6 +374,13 @@ select#image-selector {
     margin-bottom: 10px;
 }
 
+.box.slider .box-image {
+    display: none;
+}
+.box.slider .box-image:last-of-type {
+    display: block;
+}
+
 /*TODO to be removed when the api kay is used*/
 .cke_notification_warning {
     display: none!important;
