@@ -379,9 +379,7 @@
         selectedBox = null;
         const fileReader = document.getElementById("image-upload");
         fileReader.value = null;
-       // $('#bkg-color-input')[0].value = null;
         $('#text-input')[0].value = null;
-        //$('#color-input')[0].value = null;
         $('#config-image').show();
         $('#config-text').hide();
         $('#toggleButton').removeClass('active');
@@ -495,7 +493,7 @@
                         console.log(arguments);
                         //$("#status").html("Upload failed: " + error);
                         //TODO to remove these lines when integrating back to the admin
-                        var response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg'}
+                        var response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/5-20241106-100659567-1920x6501.jpg'}
                         var $box = $("#" + selectedBox.id);
                         var nextImgId = $box.find("img.box-image").length + 1;
                         $img = $("<img />").attr("src", response.url)
