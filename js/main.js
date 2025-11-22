@@ -6,9 +6,6 @@
     let previewElement = null;
     let idCounter = 0;
     let selectedBox = null;
-    let boxes = []; // {imgFile: '', fontColor: '', bkgColor: '', text: ''}
-    let rows = []; //array of boxes ids
-    let singleImage = true;
 
     function resetSelect() {
         const $selector = $("#box-selector");
@@ -18,10 +15,9 @@
 
     function updateInputImgState(boxId) {
         const box = $(`.box[data-id='${boxId}']`)[0];
-       // const size = parseInt($(box).attr('data-size')) === 4 ? 7 : 1;
-       // if (boxes[boxId].imgFile?.length >= size) {
+        const imgCount = $(box).find('img.box-image').length;
 
-       if (boxes[boxId].imgFile?.length >= 1) {
+        if (imgCount >= 1) {
             if ($(box).hasClass('slider')) {
                 $("#image-upload").prop('disabled', false);
                 $('#slider-config').show();
@@ -31,48 +27,8 @@
             }
         } else {
             $("#image-upload").prop('disabled', false);
-                $('#slider-config').hide();
+            $('#slider-config').hide();
         }
-
-        /*if (boxes[boxId].imgFile?.length > 1) { 
-           
-            $(box).addClass('slider');
-        } else {
-            $(box).removeClass('slider');
-        
-        }     */  
-    }
-
-    function addBoxData(boxElement, boxData) {
-        const header = boxElement.getElementsByClassName('box-header');
-        header[0].textContent = `Box 1x${boxData.size} ID: ${idCounter}`;
-        boxElement.setAttribute('data-name', idCounter);
-        boxElement.draggable = true;
-        const actionsDiv = document.createElement("div");
-        actionsDiv.className = "box-actions";
-        boxElement.appendChild(actionsDiv);
-        addRemoveButton(actionsDiv);
-        addTextContent(boxElement, boxData.text);
-        boxElement.dataset.id = idCounter;
-
-        if (boxData.fontColor || boxData.bkgColor) {
-            boxElement.style.color = boxData.fontColor || '';
-            boxElement.style.backgroundColor = boxData.bkgColor || '';
-        }
-
-        if (boxData.imgFile.length > 0) {
-            boxElement.style.backgroundImage = `url(${boxData.imgFile[boxData.imgFile.length - 1].url})`;
-            boxElement.style.backgroundSize = "contain";
-            boxElement.style.backgroundPosition = "center";
-            boxElement.style.backgroundRepeat = "no-repeat";
-            if (boxData.imgFile?.length > 1) {
-              //  $('#config-bkg').hide();
-                $(boxElement).addClass('slider');
-                boxElement.style.backgroundColor = '';
-            }
-        }
-
-        return boxElement;
     }
 
     function createBox(boxData) {
@@ -117,14 +73,11 @@
         let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
         return (usedSpace + parseInt(size) <= 4) 
     }
-    
-    function addRemoveButton(actions) {
-        const removeBtn = document.createElement("button");
-        removeBtn.innerHTML = "<i class='fas fa-times'></i>";
-        removeBtn.classList.add("remove-btn");
-        removeBtn.addEventListener("click", () => {
+
+    function addRemoveButtonClickEvent(btn) {
+        btn.on("click", () => {
             closeConfig();
-            let box = actions.parentNode;
+            let box = btn.closest(".box")[0];
             let parentRow = box.parentNode;
 
             box.remove();
@@ -134,6 +87,13 @@
 
             ensureEmptyRow();
         });
+    }
+    
+    function addRemoveButton(actions) {
+        const removeBtn = document.createElement("button");
+        removeBtn.innerHTML = "<i class='fas fa-times'></i>";
+        removeBtn.classList.add("remove-btn");
+        addRemoveButtonClickEvent($(removeBtn));
         actions.appendChild(removeBtn);
     }
 
@@ -190,10 +150,10 @@
         configBox.setAttribute('data-box-id', id);
         let name = document.getElementById('box-name');
         name.innerHTML = 'Box ' + box.getAttribute('data-name');
-        const imgFile = boxes[id]?.imgFile;
+        const $box = $(box);
+        const imgCount = $box.find('img.box-image').length;
         const size = box.dataset.size;
         
-        let imgUrl = imgFile?.length > 0 ? imgFile[0].file : null;
         selectedBox = box;
 
         if (size == 4) {
@@ -201,7 +161,7 @@
         } else {
             $('#image-upload-wrapper').show();
         }
-        if (boxes[id]?.imgFile.length > 0) {
+        if (imgCount > 0) {
             loadPreviewImages(id);
             if ($(box).hasClass('slider')) {
                 loadSliderConfig($(box));
@@ -216,20 +176,8 @@
             $('#config-image').hide();
         }
         
-        
-        if (imgUrl && !$.isEmptyObject(imgUrl)) {
-            const fileReader = document.getElementById("image-upload");
-            const dataTransfer = new DataTransfer();
-            // Add your file to the file list of the object
-            dataTransfer.items.add(imgUrl);
-            // Save the file list to a new variable
-            const fileList = dataTransfer.files;
-            // Set your input `files` to the file list
-            fileReader.files = fileList;
-        } else {
-            const fileReader = document.getElementById("image-upload");
-            fileReader.value = null;
-        }
+        const fileReader = document.getElementById("image-upload");
+        fileReader.value = null;
     
 
         configBox.className = '';
@@ -238,9 +186,13 @@
     }
 
     function loadPreviewImages(boxId) {
-        boxes[boxId]?.imgFile.forEach((imgFile, index) => {
-            addPreviewImage(imgFile, boxId, index);
-        }); 
+        const box = $(`.box[data-id='${boxId}']`)[0];
+        $(box).find('img.box-image').each(function(index) {
+            const imgData = {
+                url: $(this).attr('src')
+            };
+            addPreviewImage(imgData, boxId, index);
+        });
     }
 
     function addRemovePreviewButton(img, boxId, imgId) {
@@ -252,8 +204,6 @@
             event.preventDefault();
             event.stopPropagation();
             img.parent().remove();
-            const imgs =  boxes[boxId].imgFile;
-            boxes[boxId].imgFile = imgs.splice(0, imgId);
             updateInputImgState(boxId);
             const fileReader = document.getElementById("image-upload");
             fileReader.value = null;
@@ -270,13 +220,12 @@
 
     function addImageLink(wrapper, boxId, imgId) {
 			const input = $("<input type='url' class='input-link'>");
-			input[0].value = boxes[boxId]?.imgFile[imgId]?.link || '';
+			var $box = $(`#box${boxId}`);
+			var $img = $box.find("img[data-id=" + (imgId + 1) + "]");
+			input[0].value = $img.attr('data-url') || '';
 			input.on('change', (event)=> {
-				boxes[boxId].imgFile[imgId].link = $.trim(event.target.value);
-				
-				//var $box = $("#" + boxes[boxId].id);
 				var $box = $(`#box${boxId}`);
-				$box.find("img[data-id=" + (imgId + 1) + "]").attr("data-url", boxes[boxId].imgFile[imgId].link);
+				$box.find("img[data-id=" + (imgId + 1) + "]").attr("data-url", $.trim(event.target.value));
 				
 				
                 event.preventDefault();
@@ -299,7 +248,9 @@
                     .append("<div class=\"toggle toggle-motion\"></div>")
                     .append("<span>On</span>");
 
-                if ("motion" in boxes[boxId].imgFile[imgId] && boxes[boxId].imgFile[imgId].motion == true){
+                var $box = $(`#box${boxId}`);
+                var $img = $box.find("img[data-id=" + (imgId + 1) + "]");
+                if ($img.attr('data-motion') === 'true'){
                     $div2.find("div.toggle-motion").addClass("active");
                 }
                 
@@ -319,9 +270,12 @@
 
         function getImageTitle(boxId, imgId) {
             const input = $("<input type='text' class='input-link'>");
-			input[0].value = boxes[boxId]?.imgFile[imgId]?.title || '';
+            var $box = $(`#box${boxId}`);
+            var $img = $box.find("img[data-id=" + (imgId + 1) + "]");
+			input[0].value = $img.attr('data-title') || '';
 			input.on('change', (event)=> {
-                boxes[boxId].imgFile[imgId].title = $.trim(event.target.value);
+                var $box = $(`#box${boxId}`);
+                $box.find("img[data-id=" + (imgId + 1) + "]").attr("data-title", $.trim(event.target.value));
                 event.preventDefault();
 				event.stopPropagation();
             });
@@ -334,9 +288,12 @@
 
         function getImageAlt(boxId, imgId) {
             const input = $("<input type='text' class='input-link'>");
-			input[0].value = boxes[boxId]?.imgFile[imgId]?.alt || '';
+            var $box = $(`#box${boxId}`);
+            var $img = $box.find("img[data-id=" + (imgId + 1) + "]");
+			input[0].value = $img.attr('data-alt') || '';
 			input.on('change', (event)=> {
-                boxes[boxId].imgFile[imgId].alt = $.trim(event.target.value);
+                var $box = $(`#box${boxId}`);
+                $box.find("img[data-id=" + (imgId + 1) + "]").attr("data-alt", $.trim(event.target.value));
                 event.preventDefault();
 				event.stopPropagation();
             });
@@ -349,24 +306,21 @@
         }
 
 		function addConfigMotionToggleEvent($el, boxId, imgId) {
-			$el.on("click", function(){
-				var $toggle = $el.find("div.toggle-motion");
+		$el.on("click", function(){
+			var $toggle = $el.find("div.toggle-motion");
+			var $box = $(`#box${boxId}`);
+			var $img = $box.find("img[data-id=" + (imgId + 1) + "]");
 
-				if ($toggle.hasClass("active")){
-					$toggle.removeClass("active");
-
-					boxes[boxId].imgFile[imgId].motion = false;
-				}
-				else {
-					$toggle.addClass("active");
-					boxes[boxId].imgFile[imgId].motion = true;
-				}
-
-				var $box = $(`#box${boxId}`);
-				$box.find("img[data-id=" + (imgId + 1) + "]").attr("data-motion", boxes[boxId].imgFile[imgId].motion);
-				
-			});
-		}
+			if ($toggle.hasClass("active")){
+				$toggle.removeClass("active");
+				$img.attr("data-motion", false);
+			}
+			else {
+				$toggle.addClass("active");
+				$img.attr("data-motion", true);
+			}
+		});
+	}
 
     function addPreviewImage(imgFile, boxId, imgId) {
         const img = $('<img>');
@@ -425,9 +379,7 @@
         selectedBox = null;
         const fileReader = document.getElementById("image-upload");
         fileReader.value = null;
-       // $('#bkg-color-input')[0].value = null;
         $('#text-input')[0].value = null;
-        //$('#color-input')[0].value = null;
         $('#config-image').show();
         $('#config-text').hide();
         $('#toggleButton').removeClass('active');
@@ -485,7 +437,6 @@
 			CKEDITOR.instances["text-input"].setData("");
         $('.img-preview-list').html('');
         if (selectedBox) {
-            boxes[selectedBox.dataset.id] = { imgFile: []};
             updateInputImgState(selectedBox.dataset.id);
         }
         closeResetSliderConfig();
@@ -517,17 +468,20 @@
                         console.log(response);
 
                         if (response.success == true){
-                            boxes[selectedBox.dataset.id].imgFile.push({file, url: response.url});
+                            var $box = $("#" + selectedBox.id);
+                            var nextImgId = $box.find("img.box-image").length + 1;
                             $img = $("<img />").attr("src", response.url)
-                                .addClass("english")
+                                .addClass("box-image")
                                 .attr("data-url", "")
                                 .attr("data-motion", false)
-                                .attr("data-id", boxes[selectedBox.dataset.id].imgFile.length);
+                                .attr("data-alt", "")
+                                .attr("data-title", "")
+                                .attr("data-id", nextImgId);
 
                             var $box = $("#" + selectedBox.id);
                             $box.find("img.box-image").remove();
                             $box.append($img);
-                            addPreviewImage({file, url: response.url},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
+                            addPreviewImage({file, url: response.url},selectedBox.dataset.id, nextImgId - 1);
                             updateInputImgState(selectedBox.dataset.id);
                         }
                         else {
@@ -539,18 +493,21 @@
                         console.log(arguments);
                         //$("#status").html("Upload failed: " + error);
                         //TODO to remove these lines when integrating back to the admin
-                        var response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg'}
-                        boxes[selectedBox.dataset.id].imgFile.push({file, url: response.url});
+                        var response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/5-20241106-100659567-1920x6501.jpg'}
+                        var $box = $("#" + selectedBox.id);
+                        var nextImgId = $box.find("img.box-image").length + 1;
                         $img = $("<img />").attr("src", response.url)
                                 .addClass("box-image")
                                 .attr("data-url", "")
                                 .attr("data-motion", false)
-                                .attr("data-id", boxes[selectedBox.dataset.id].imgFile.length);
+                                .attr("data-alt", "")
+                                .attr("data-title", "")
+                                .attr("data-id", nextImgId);
 
                             var $box = $("#" + selectedBox.id);
                   //          $box.find("img.box-image").remove();
                             $box.append($img);
-                        addPreviewImage({file, url: response.url},selectedBox.dataset.id, boxes[selectedBox.dataset.id].imgFile.length - 1);
+                        addPreviewImage({file, url: response.url},selectedBox.dataset.id, nextImgId - 1);
                         updateInputImgState(selectedBox.dataset.id);
                     }
                 });
@@ -658,13 +615,6 @@
             newElement.appendChild(actionsDiv);
             addRemoveButton(actionsDiv);
             addTextContent(newElement);
-            boxes.push({
-                imgFile: [],
-                fontColor: '',
-                bkgColor: '',
-                text: '',
-                size: draggedElement.dataset.size,
-            });
             idCounter++;
             draggedElement.remove(); // Remove from elements-container
             resetSelect();
@@ -696,9 +646,6 @@
             const box = $(`#box${boxId}`);
             box.children('.box-text')[0].innerHTML = event.target.value;
             
-            boxes[selectedBox.dataset.id] = boxes[selectedBox.dataset.id] || {};
-            boxes[selectedBox.dataset.id].html = box.html(); //event.target.value;
-            
             event.stopPropagation();
         });
 
@@ -727,16 +674,8 @@
 
     function addSaveEvent() {
         $(document).on('click', '#save-btn', () => {
-            ($('#page-container').children()).each((rowIndex, rowWrapper) => {
-                const row = $(rowWrapper).find('.box');
-                const rowData =  [];
-                row.each((boxIndex, box) => {
-                    console.log('box', box);
-                    rowData.push(boxes[box.dataset.id]);
-                });
-                rows.push(rowData);
-            });
-            console.log(rows);
+            const outputDiv = $('#output-container');
+            outputDiv.html(generateOutputPage());
         });
     }
 
@@ -746,36 +685,12 @@
             pageContainer.innerHTML = '';
             idCounter = 0;
             selectedBox = null;
-            boxes = []; // {imgFile: '', fontColor: '', bkgColor: '', text: ''}
-            rows = [];
             event.preventDefault();
             event.stopPropagation();
-            data.forEach((row) => {
-
-                let newRow = $(`
-                    <div class="row-wrapper">
-                        <div class="row-controls">
-                            <button class="move-up"><i class="fas fa-arrow-up"></i></button>
-                            <button class="move-down"><i class="fas fa-arrow-down"></i></button>
-                            <button class="row-remove-btn"><i class="fas fa-times"></i></button>
-                        </div>
-                        <div class="row"></div>
-                    </div>
-                `);
-
-                let rowContainer = newRow.find(".row");
-                row.forEach(boxData => {
-                    let box = createBox(boxData);
-                    rowContainer.append(box);
-                    
-                    box = addBoxData(box, boxData);
-                    boxes.push(boxData);
-                    idCounter++;
-                });
-
-                $('#page-container').append(newRow);
-
-            });
+            const $editablePreview = generateEditableLivePreview();
+            idCounter = $editablePreview.find('.box').length;
+            pageContainer.innerHTML = '';
+            $(pageContainer).append($editablePreview.children());
 
         });
     }
@@ -783,12 +698,15 @@
     function addBoxClickEvent() {
         $(document).on('click', '.box-actions', (event) => {
             event.stopPropagation();
-            elementsContainer.preventDefault();
+            event.preventDefault();
         });
         $(document).on('click', '.box', (event) => {
-            var target = event.target.closest('.box');
-            openConfig(target);
+            if (!event.target.closest('#elements-container')) {
+                var target = event.target.closest('.box');
+                openConfig(target);
+            }
             event.preventDefault();
+
         });
     }
 
@@ -888,9 +806,12 @@
 
 
     function generateEditableLivePreview(selector = "#page-container") {
-
+        const testHtml = `<div id="page-container">
+            <div class="row"><div class="box col-2" draggable="true" data-size="2" style="visibility: visible;" data-id="0" id="box0" data-name="0"><div class="box-text"><p><strong>test</strong></p>
+</div></div></div>
+        <div class="row"><div class="box col-4 slider" draggable="true" data-size="4" style="visibility: visible;" data-id="1" id="box1" data-name="1" data-seconds="1" data-randomize-order="true"><div class="box-text"></div><img src="https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg" class="box-image" data-url="llink" data-motion="false" data-alt="alt" data-title="title" data-id="1"><img src="https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg" class="box-image" data-url="link2" data-motion="false" data-alt="alt2" data-title="title2" data-id="2"></div></div><div class="row"><div class="box col-4" draggable="true" data-size="4" style="visibility: visible;" data-id="2" id="box2" data-name="2"><div class="box-text"></div><img src="https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg" class="box-image" data-url="single" data-motion="true" data-alt="single" data-title="single" data-id="1"></div></div><div class="row"></div></div>`;
         // Clone so original DOM is untouched
-        const $clone = $(selector).clone();
+        const $clone = $(testHtml).clone();
 
         // 1. Wrap each .row in a new .row-wrapper and add .row-controls
         $clone.find("> .row").each(function() {
@@ -938,6 +859,8 @@
                     </div>
                 `);
             }
+
+            addRemoveButtonClickEvent($box.find(".remove-btn"));
         });
 
         return $clone;
