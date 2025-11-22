@@ -674,8 +674,23 @@
 
     function addSaveEvent() {
         $(document).on('click', '#save-btn', () => {
-            const outputDiv = $('#output-container');
-            outputDiv.html(generateOutputPage());
+         
+            // Open a new, blank window
+            const newWindow = window.open('', '_blank');
+
+            // Check if the new window was successfully opened
+            if (newWindow) {
+                // Get the document object of the new window
+                const newDoc = newWindow.document;
+
+                // Write the dynamic HTML content to the new document
+                newDoc.write(generateOutputPage().html());
+                const cssLink = newWindow.document.createElement("link");
+                cssLink.rel = "stylesheet";
+                cssLink.type = "text/css";
+                cssLink.href = "../css/styles.css"; // Replace with the actual path to your CSS file
+                newDoc.head.appendChild(cssLink);
+            }
         });
     }
 
