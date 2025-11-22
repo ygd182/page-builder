@@ -98,7 +98,6 @@ input {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
     margin: 5px 0;
     background-color: var(--box-bkg);
     text-align: center;
@@ -111,8 +110,8 @@ input {
 }
 .box-text {
     overflow: hidden;
-    white-space: nowrap;
     text-overflow: ellipsis;
+    height: 100%;
 }
 .box.slider:before {
     content: 'Slider';
