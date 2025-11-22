@@ -688,7 +688,7 @@
                 const cssLink = newWindow.document.createElement("link");
                 cssLink.rel = "stylesheet";
                 cssLink.type = "text/css";
-                cssLink.href = "../css/styles.css"; // Replace with the actual path to your CSS file
+                cssLink.href = "../page-builder/css/styles.css"; // Replace with the actual path to your CSS file
                 newDoc.head.appendChild(cssLink);
             }
         });
