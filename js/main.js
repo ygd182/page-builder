@@ -99,9 +99,16 @@
 
     function addNewRow() {
         closeConfig();
-        let newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up"><i class="fas fa-arrow-up"></i></button><button class="move-down"><i class="fas fa-arrow-down"></i></button><button class="row-remove-btn"><i class="fas fa-times"></i></button></div><div class="row"></div></div>';
-    
-        $('#page-container').append(newRow);
+        const newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up"><i class="fas fa-arrow-up"></i></button><button class="move-down"><i class="fas fa-arrow-down"></i></button><button class="row-remove-btn"><i class="fas fa-times"></i></button></div><div class="row"></div></div>';
+        const $newRow = $(newRow);
+      
+
+        const $row = $newRow.find('.row');
+        spacingLibInstance = spacingLib();
+        spacingLibInstance.initSpacingControl($newRow);
+        spacingLibInstance.applyTo($row);
+        $('#page-container').append($newRow);
+       
     }
 
     function deleteLastRow() {
@@ -181,7 +188,11 @@
     
 
         configBox.className = '';
-        
+        const spacingEl = $(configBox).find('#spacing-wrapper');
+
+        spacingLibInstance = spacingLib();
+        spacingLibInstance.initSpacingControl(spacingEl);
+        spacingLibInstance.applyTo($box);
         updateInputImgState(id);
     }
 
@@ -385,6 +396,7 @@
         $('#toggleButton').removeClass('active');
         closeImageSelector();
         closeResetSliderConfig();
+        $('#spacing-wrapper').empty();
     }
 
     function resetSelect() {
@@ -793,6 +805,13 @@
 		});
     }
 
+    function applyProperty($el, prop) {
+        value = $el.attr(`data-${prop}`);
+        if (value) {
+            $el.css(prop, value);
+        }
+    }
+
     function generateOutputPage(selector = "#page-container") {
 
         // Clone node so we don't modify the original
@@ -805,6 +824,8 @@
         $clone.find(".row-wrapper").each(function() {
             const $row = $(this).find(".row").first();
             if ($row.length) {
+                applyProperty($row, 'padding');
+                applyProperty($row, 'margin');
                 $(this).replaceWith($row);
             } else {
                 $(this).remove();
@@ -814,9 +835,17 @@
         // Remove .box-header and .box-actions from each .box
         $clone.find(".box .box-header").remove();
         $clone.find(".box .box-actions").remove();
+        addPropertiesToBox($clone);
 
         // Return jQuery element (DOM node)
         return $clone;
+    }
+
+    function addPropertiesToBox($wrapper) {
+        $wrapper.find('.box').each((i, box) => {
+            applyProperty($(box), 'padding');
+            applyProperty($(box), 'margin');
+        });
     }
 
 
@@ -922,13 +951,21 @@
         });
     }
 
+    function addspacingToexistingRow() {
+        const $rowWrapper = $('.row-wrapper');
+        const $row = $rowWrapper.find('.row');
+        spacingLibInstance = spacingLib();
+        spacingLibInstance.initSpacingControl($rowWrapper);
+        spacingLibInstance.applyTo($row);
+    }
+
 
     $(document).ready(() => {
         elementsContainer = document.getElementById("elements-container");
         pageContainer = document.getElementById("page-container");
         previewElement = document.createElement("div");
         previewElement.classList.add("preview");
-
+        addspacingToexistingRow();
         addNewRowEvent();
         addBoxClickEvent();
         addBoxEvent();
@@ -939,6 +976,7 @@
         addCKEditor();
 
         addSaveEvent();
-        addLoadEvent();
+        addLoadEvent()
+     
     });
 })();
