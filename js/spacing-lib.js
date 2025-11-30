@@ -178,13 +178,77 @@ const spacingLib = (function () {
             appliedTargets = $(selector);
         }
 
+        /** ------------------------------------------------------------
+         *   LOAD EXISTING VALUES FROM data-* ATTRIBUTES
+         * -----------------------------------------------------------*/
+        function loadFromElement($wrapper, $target) {
+            if (!$target || !$target.length) return;
+
+            // CASE 1: configuring a box → look inside #spacing-wrapper
+            let $container = $wrapper.closest('#config-box').find('#spacing-wrapper');
+            console.log($container)
+            // CASE 2: configuring a row → look inside row-wrapper
+            if (!$container.length || $container.children().length === 0) {
+                $container = $target.closest('.row-wrapper');
+            }
+
+            if (!$container.length) return;
+
+            const $groups = $container.find('.wp-spacing-group');
+
+            $groups.each(function() {
+                const $group = $(this);
+                const groupName = $group.find('.wp-spacing-title').text().toLowerCase(); // margin or padding
+                const $unitSelector = $group.find('.wp-spacing-unit');
+                const $inputs = $group.find('.wp-spacing-input');
+                const $linkBtn = $group.find('.wp-spacing-link-btn');
+
+                // Read existing data attributes
+                let values = {};
+                $inputs.each(function() {
+                    const dir = $(this).data("direction");
+
+                    // data-margin-left, data-padding-top, etc.
+                    const attrVal = $target.attr(`data-${groupName}-${dir}`)
+                                || $target.attr(`data-${groupName}`); // fallback (linked)
+
+                    values[dir] = attrVal || "";
+                });
+
+                // Check if all sides equal → linked mode
+                const cleanVals = Object.values(values).filter(v => v !== "");
+                const linked = cleanVals.length && cleanVals.every(v => v === cleanVals[0]);
+
+                // Apply linked icon state
+                $linkBtn
+                    .attr("data-linked", linked ? "true" : "false")
+                    .text(linked ? "🔗" : "🔓");
+
+                // Fill input values
+                $inputs.each(function() {
+                    const dir = $(this).data("direction");
+                    const v = values[dir];
+                    if (!v) return;
+
+                    const m = v.match(/^([0-9.]+)(px|%)?$/);
+                    if (!m) return;
+
+                    $(this).val(m[1]);
+                    $unitSelector.val(m[2] || "px");
+                });
+            });
+        }
+
+
+
 
         /** ------------------------------------------------------------
          *   PUBLIC METHODS
          * -----------------------------------------------------------*/
         return {
             initSpacingControl,
-            applyTo
+            applyTo,
+            loadFromElement
         };
     }
 

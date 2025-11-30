@@ -148,7 +148,6 @@
     }
 
     function openConfig(box) {
-        console.log(box);
         closeConfig();
         
         const id = box.dataset.id;
@@ -193,6 +192,7 @@
         spacingLibInstance = spacingLib();
         spacingLibInstance.initSpacingControl(spacingEl);
         spacingLibInstance.applyTo($box);
+        spacingLibInstance.loadFromElement(spacingEl, $box);
         updateInputImgState(id);
     }
 
@@ -709,6 +709,7 @@
     function addLoadEvent() {
         
         $(document).on('click', '#load-btn', (event) => {
+            closeConfig();
             pageContainer.innerHTML = '';
             idCounter = 0;
             selectedBox = null;
@@ -806,11 +807,25 @@
     }
 
     function applyProperty($el, prop) {
-        value = $el.attr(`data-${prop}`);
-        if (value) {
-            $el.css(prop, value);
+        // 1) Read the global shorthand — e.g., data-margin or data-padding
+        const baseValue = $el.attr(`data-${prop}`);
+        if (baseValue) {
+            $el.css(prop, baseValue); // e.g. margin: 10px;
         }
+
+        // 2) Individual directions
+        const directions = ["top", "right", "bottom", "left"];
+
+        directions.forEach(dir => {
+            const attrName = `data-${prop}-${dir}`;  // e.g. data-margin-top
+            const val = $el.attr(attrName);
+
+            if (val) {
+                $el.css(`${prop}-${dir}`, val); // e.g. margin-top: 5px;
+            }
+        });
     }
+
 
     function generateOutputPage(selector = "#page-container") {
 
@@ -843,6 +858,7 @@
 
     function addPropertiesToBox($wrapper) {
         $wrapper.find('.box').each((i, box) => {
+            console.log(box);
             applyProperty($(box), 'padding');
             applyProperty($(box), 'margin');
         });
@@ -851,16 +867,16 @@
 
     function generateEditableLivePreview(selector = "#page-container") {
         const testHtml = `<div id="page-container">
-            <div class="row"><div class="box col-2" draggable="true" data-size="2" style="visibility: visible;" data-id="0" id="box0" data-name="0"><div class="box-text"><p><strong>test</strong></p>
+            <div class="row" data-margin="10px" data-padding="15%" style="margin:10px;padding:15%"><div class="box col-2"  data-margin="11%" data-padding="15%" style="margin:11%;padding:15%" draggable="true" data-size="2" style="visibility: visible;" data-id="0" id="box0" data-name="0"><div class="box-text"><p><strong>test</strong></p>
 </div></div></div>
-        <div class="row"><div class="box col-4 slider" draggable="true" data-size="4" style="visibility: visible;" data-id="1" id="box1" data-name="1" data-seconds="1" data-randomize-order="true"><div class="box-text"></div><img src="https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg" class="box-image" data-url="llink" data-motion="false" data-alt="alt" data-title="title" data-id="1"><img src="https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg" class="box-image" data-url="link2" data-motion="false" data-alt="alt2" data-title="title2" data-id="2"></div></div><div class="row"><div class="box col-4" draggable="true" data-size="4" style="visibility: visible;" data-id="2" id="box2" data-name="2"><div class="box-text"></div><img src="https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg" class="box-image" data-url="single" data-motion="true" data-alt="single" data-title="single" data-id="1"></div></div><div class="row"></div></div>`;
+        <div class="row" data-margin="10%" data-padding="5%" style="margin:10%;padding:5%"><div class="box col-4 slider" draggable="true" data-size="4" style="visibility: visible;" data-id="1" id="box1" data-name="1" data-seconds="1" data-randomize-order="true"><div class="box-text"></div><img src="https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg" class="box-image" data-url="llink" data-motion="false" data-alt="alt" data-title="title" data-id="1"><img src="https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg" class="box-image" data-url="link2" data-motion="false" data-alt="alt2" data-title="title2" data-id="2"></div></div><div class="row"><div class="box col-4" draggable="true" data-size="4" style="visibility: visible;" data-id="2" id="box2" data-name="2"><div class="box-text"></div><img src="https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/headwear5.jpg" class="box-image" data-url="single" data-motion="true" data-alt="single" data-title="single" data-id="1"></div></div><div class="row"></div></div>`;
         // Clone so original DOM is untouched
         const $clone = $(testHtml).clone();
 
         // 1. Wrap each .row in a new .row-wrapper and add .row-controls
         $clone.find("> .row").each(function() {
             const $row = $(this);
-
+            $row.removeAttr('style');
             // Create row-controls
             const $controls = $(`
                 <div class="row-controls">
@@ -875,7 +891,9 @@
 
             // Wrap
             $row.wrap($wrapper);
+            const $realWrapper = $row.parent();
 
+            addSpacingControlToRow($realWrapper, $row);
             // Insert controls before the row
             $row.before($controls);
         });
@@ -883,6 +901,7 @@
         // 2. Add box-header and box-actions to each .box
         $clone.find(".box").each(function() {
             const $box = $(this);
+            $box.removeAttr('style');
 
             const boxId = $box.attr("data-id") || "";
             const boxSize = $box.attr("data-size") || "";
@@ -951,12 +970,17 @@
         });
     }
 
-    function addspacingToexistingRow() {
-        const $rowWrapper = $('.row-wrapper');
-        const $row = $rowWrapper.find('.row');
+    function addSpacingControlToRow($rowWrapper, $row) {
         spacingLibInstance = spacingLib();
         spacingLibInstance.initSpacingControl($rowWrapper);
         spacingLibInstance.applyTo($row);
+        spacingLibInstance.loadFromElement($rowWrapper, $row); 
+    }
+
+    function addspacingToExistingRow() {
+        const $rowWrapper = $('.row-wrapper');
+        const $row = $rowWrapper.find('.row');
+        addSpacingControlToRow($rowWrapper, $row);
     }
 
 
@@ -965,7 +989,7 @@
         pageContainer = document.getElementById("page-container");
         previewElement = document.createElement("div");
         previewElement.classList.add("preview");
-        addspacingToexistingRow();
+        addspacingToExistingRow();
         addNewRowEvent();
         addBoxClickEvent();
         addBoxEvent();
