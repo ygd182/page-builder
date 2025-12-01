@@ -84,7 +84,7 @@ const spacingLib = (function () {
                     unit: unit,
                     linked: linked
                 };
-
+                
                 $wrapper.trigger("spacing-change", eventPayload);
 
                 // Apply to preview if configured
@@ -186,7 +186,6 @@ const spacingLib = (function () {
 
             // CASE 1: configuring a box → look inside #spacing-wrapper
             let $container = $wrapper.closest('#config-box').find('#spacing-wrapper');
-            console.log($container)
             // CASE 2: configuring a row → look inside row-wrapper
             if (!$container.length || $container.children().length === 0) {
                 $container = $target.closest('.row-wrapper');
@@ -215,9 +214,19 @@ const spacingLib = (function () {
                     values[dir] = attrVal || "";
                 });
 
-                // Check if all sides equal → linked mode
-                const cleanVals = Object.values(values).filter(v => v !== "");
-                const linked = cleanVals.length && cleanVals.every(v => v === cleanVals[0]);
+                // Determine linked state:
+                // - linked if all 4 values match
+                // - linked if all are empty
+                const vals = Object.values(values);
+
+                // Check if ALL are empty → linked
+                const allEmpty = vals.every(v => v === "");
+
+                // Check if ALL are equal (and not empty)
+                const allEqual = vals.every(v => v === vals[0]) && vals[0] !== "";
+
+                // Final linked state
+                const linked = allEmpty || allEqual;
 
                 // Apply linked icon state
                 $linkBtn
