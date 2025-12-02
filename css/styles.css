@@ -12,7 +12,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    padding: 20px;
     font-size: 1em;
     font-family: Arial, Helvetica, sans-serif;
     color: var(--gray-sport-80);
@@ -23,7 +22,7 @@ input {
 }
 .page-section {
     display: flex;
-    gap: 310px
+    gap: 165px
 }
 .section-header {
     display: flex;
@@ -41,14 +40,16 @@ input {
 #page-container {
     height: 100%;
     min-width: 624px;
+    padding: 5px;
 }
 #config-box {
     min-height: 360px;
-    min-width: 560px;
+    width: 500px;
 }
 #elements-container {
-    min-height: 184px;
-    height: 184px;
+    min-height: 187px;
+    height: 164px;
+    padding: 17px 5px;
 }
 .hidden{
     display: none;
@@ -59,15 +60,14 @@ input {
 .row {
     display: flex;
     width: 100%;
-    min-height: 100px;
     border-bottom: 1px solid #ddd;
-    min-height: 151px;
+    min-height: 186px;
     box-sizing: border-box;
-    padding: 10px 0;
+    padding: 18px 0;
 }
 .row-controls {
     position: absolute;
-    top: 10px;
+    top: 0px;
     right: -90px;
     display: flex;
     gap: 5px;
@@ -181,6 +181,7 @@ input {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    gap: 5px;
 }
 .config-box-header h3 {
     margin-top: 0;
@@ -396,7 +397,15 @@ select#image-selector {
 .row-wrapper .wp-spacing-row {
     position: absolute;
     left: calc(100% + 20px);
-    bottom: 25px;
+    bottom: 10px;
+}
+
+.row-wrapper .wp-spacing-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 5px;
+    background-color: #dddada;
 }
 
 /*TODO to be removed when the api kay is used*/
