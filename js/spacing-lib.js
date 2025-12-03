@@ -252,12 +252,22 @@ const spacingLib = (function () {
 
 
         /** ------------------------------------------------------------
+         *   DESTROY METHOD - Clean up to prevent memory leaks
+         * -----------------------------------------------------------*/
+        function destroy() {
+            if (appliedTargets) {
+                appliedTargets = null;
+            }
+        }
+
+        /** ------------------------------------------------------------
          *   PUBLIC METHODS
          * -----------------------------------------------------------*/
         return {
             initSpacingControl,
             applyTo,
-            loadFromElement
+            loadFromElement,
+            destroy
         };
     }
 
