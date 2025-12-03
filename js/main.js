@@ -6,28 +6,31 @@
     let previewElement = null;
     let idCounter = 0;
     let selectedBox = null;
+    let spacingInstances = new Map(); // Track spacing instances for cleanup
 
     function resetSelect() {
         const $selector = $("#box-selector");
         $selector.val(0);
-        $selector.trigger("change");
     }
 
     function updateInputImgState(boxId) {
         const box = $(`.box[data-id='${boxId}']`)[0];
         const imgCount = $(box).find('img.box-image').length;
-
+        const $selector = $("#image-selector");
         if (imgCount >= 1) {
             if ($(box).hasClass('slider')) {
                 $("#image-upload").prop('disabled', false);
                 $('#slider-config').show();
+                $selector.val(2);
             } else {
                 $("#image-upload").prop('disabled', true);
                 $('#slider-config').hide();
+                $selector.val(1);
             }
         } else {
             $("#image-upload").prop('disabled', false);
             $('#slider-config').hide();
+          //  $selector.val(0);
         }
     }
 
@@ -46,7 +49,8 @@
     }
 
     function addBoxEvent() {
-        document.addEventListener('change', ()=> {
+        // Use jQuery event delegation on the specific selector to prevent listener accumulation
+        $('#box-selector').off('change.boxEvent').on('change.boxEvent', ()=> {
             closeConfig();
             const selector = document.getElementById("box-selector");
             const size = selector.value;
@@ -104,9 +108,10 @@
       
 
         const $row = $newRow.find('.row');
-        spacingLibInstance = spacingLib();
+        const spacingLibInstance = spacingLib();
         spacingLibInstance.initSpacingControl($newRow);
         spacingLibInstance.applyTo($row);
+        spacingInstances.set($row[0], spacingLibInstance); // Track instance
         $('#page-container').append($newRow);
        
     }
@@ -189,10 +194,11 @@
         configBox.className = '';
         const spacingEl = $(configBox).find('#spacing-wrapper');
 
-        spacingLibInstance = spacingLib();
+        const spacingLibInstance = spacingLib();
         spacingLibInstance.initSpacingControl(spacingEl);
         spacingLibInstance.applyTo($box);
         spacingLibInstance.loadFromElement(spacingEl, $box);
+        spacingInstances.set($box[0], spacingLibInstance); // Track instance
         updateInputImgState(id);
     }
 
@@ -380,6 +386,11 @@
     }
 
     function closeConfig() {
+        // Destroy CKEditor instance to prevent memory leak
+        if (CKEDITOR.instances["text-input"]) {
+            CKEDITOR.instances["text-input"].destroy(true);
+        }
+        
         $('.img-preview-list').html('');
         let configBox = document.getElementById("config-box");
         configBox.setAttribute('data-box-id', null);
@@ -399,12 +410,6 @@
         $('#spacing-wrapper').empty();
     }
 
-    function resetSelect() {
-        const $selector = $("#image-selector");
-        $selector.val(0);
-    }
-
-
     function closeImageSelector() {
         singleImage = true;
         $('#image-selector').hide();
@@ -418,6 +423,9 @@
 
         const html = box.find('.box-text')
 
+        // Ensure CKEditor instance exists before using it
+        ensureCKEditor();
+
         if (html.html()){
        
             $('#text-input')[0].value = html.html();
@@ -430,6 +438,11 @@
     }
 
     function resetBox() {
+        // Destroy CKEditor instance before reset
+        if (CKEDITOR.instances["text-input"]) {
+            CKEDITOR.instances["text-input"].destroy(true);
+        }
+        
         const boxId = $('#config-box').attr('data-box-id');
         const box = $(`#box${boxId}`);
         box.find("img.box-image").remove();
@@ -446,7 +459,11 @@
         const fileReader = document.getElementById("image-upload");
         fileReader.value = null;
        	$('#text-input')[0].value = null;
-			CKEDITOR.instances["text-input"].setData("");
+        
+        // Ensure CKEditor exists before using it
+        ensureCKEditor();
+        CKEDITOR.instances["text-input"].setData("");
+        
         $('.img-preview-list').html('');
         if (selectedBox) {
             updateInputImgState(selectedBox.dataset.id);
@@ -649,7 +666,19 @@
 
     function removeRow(event) {
         closeConfig();
-        event.target.parentNode.parentNode.remove();
+        const rowWrapper = event.target.parentNode.parentNode;
+        const $row = $(rowWrapper).find('.row');
+        
+        // Clean up spacing instance
+        if ($row.length && spacingInstances.has($row[0])) {
+            const instance = spacingInstances.get($row[0]);
+            if (instance && typeof instance.destroy === 'function') {
+                instance.destroy();
+            }
+            spacingInstances.delete($row[0]);
+        }
+        
+        rowWrapper.remove();
     }
 
     function addConfigTextChange() {
@@ -804,6 +833,27 @@
 				});
 			}
 		});
+    }
+
+    function ensureCKEditor() {
+        // Recreate CKEditor if it doesn't exist
+        if (!CKEDITOR.instances["text-input"]) {
+            CKEDITOR.replace("text-input", {
+                toolbar: [
+                    { name: 'document', groups: [ 'mode', 'document', 'doctools' ], items: [ 'Source' ] },
+                    { name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ], items: [ 'Bold', 'Italic', 'Superscript'] },
+                    { name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi' ], items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent' ] },
+                    { name: 'links', items: [ 'Link', 'Unlink', 'Anchor' ] }
+                ]
+            });
+            
+            CKEDITOR.instances["text-input"].on('blur', function() {
+                var name = $(this).attr("name"), $el = $("[name='" + name + "']");
+                var html = CKEDITOR.instances[name].getData();
+                $el.val(html);
+                $el.get(0).dispatchEvent(new Event('change'));
+            });
+        }
     }
 
     function applyProperty($el, prop) {
@@ -971,10 +1021,11 @@
     }
 
     function addSpacingControlToRow($rowWrapper, $row) {
-        spacingLibInstance = spacingLib();
+        const spacingLibInstance = spacingLib();
         spacingLibInstance.initSpacingControl($rowWrapper);
         spacingLibInstance.applyTo($row);
-        spacingLibInstance.loadFromElement($rowWrapper, $row); 
+        spacingLibInstance.loadFromElement($rowWrapper, $row);
+        spacingInstances.set($row[0], spacingLibInstance); // Track instance
     }
 
     function addspacingToExistingRow() {
