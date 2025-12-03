@@ -11,7 +11,6 @@
     function resetSelect() {
         const $selector = $("#box-selector");
         $selector.val(0);
-        $selector.trigger("change");
     }
 
     function updateInputImgState(boxId) {
@@ -410,12 +409,6 @@
         closeResetSliderConfig();
         $('#spacing-wrapper').empty();
     }
-
-    function resetSelect() {
-        const $selector = $("#image-selector");
-        $selector.val(0);
-    }
-
 
     function closeImageSelector() {
         singleImage = true;
