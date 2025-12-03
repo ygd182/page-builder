@@ -17,18 +17,21 @@
     function updateInputImgState(boxId) {
         const box = $(`.box[data-id='${boxId}']`)[0];
         const imgCount = $(box).find('img.box-image').length;
-
+        const $selector = $("#image-selector");
         if (imgCount >= 1) {
             if ($(box).hasClass('slider')) {
                 $("#image-upload").prop('disabled', false);
                 $('#slider-config').show();
+                $selector.val(2);
             } else {
                 $("#image-upload").prop('disabled', true);
                 $('#slider-config').hide();
+                $selector.val(1);
             }
         } else {
             $("#image-upload").prop('disabled', false);
             $('#slider-config').hide();
+          //  $selector.val(0);
         }
     }
 
