@@ -7,6 +7,11 @@
 
     --box-bkg: #00000000;
 }
+/*style to replicate initial size*/
+html {
+    font-size: 14px;
+}
+
 body {
     font-family: Arial, sans-serif;
     display: flex;
@@ -45,7 +50,7 @@ input {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 500px;
+    width: 600px;
 }
 #elements-container, #page-container, #config-box {
     width: 624px;
@@ -75,13 +80,14 @@ input {
 .row-wrapper {
     position: relative;
 }
-.row {
+.page-builder .row {
     display: flex;
     width: 100%;
     border-bottom: 1px solid #ddd;
     min-height: 186px;
     box-sizing: border-box;
     padding: 18px 0;
+    margin: 0;
 }
 .row-controls {
     position: absolute;
@@ -300,7 +306,6 @@ button,
     border: 1px solid black;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
     font-size: 13px;
-    height: 21.5px;
 }
 button:hover,
 .custom-upload-button:hover {
@@ -393,7 +398,6 @@ i, svg { pointer-events: none; }
 }
 
 select#image-selector {
-    height: 21.5px;
     margin-bottom: 10px;
 }
 
