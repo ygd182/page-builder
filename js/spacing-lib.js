@@ -11,13 +11,13 @@ const spacingLib = (function () {
             const $title = $('<div class="wp-spacing-title"></div>').text(title);
 
             // 🔗 LINKED BUTTON
-            const $linkBtn = $('<button type="button" class="wp-spacing-link-btn"></button>')
+            const $linkBtn = $('<button type="button" class="wp-spacing-link-btn btn btn-default"></button>')
                 .attr("data-linked", "true")
                 .text("🔗");
 
             // 📏 UNIT SELECTOR
             const $unitSelector = $(`
-                <select class="wp-spacing-unit">
+                <select class="wp-spacing-unit form-control">
                     <option value="px">px</option>
                     <option value="%">%</option>
                 </select>
