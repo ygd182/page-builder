@@ -36,6 +36,12 @@
     border-radius: 3px;
 }
 
+select.form-control.wp-spacing-unit {
+    height: 22px;
+    padding: 0;
+    width: auto;
+}
+
 .wp-spacing-title-row {
     display: flex;
     justify-content: space-between;
@@ -47,5 +53,6 @@
     cursor: pointer;
     font-size: 11px;
     padding: 0 6px;
+    height: 22px;
 }
 
