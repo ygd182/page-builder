@@ -5,88 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drag & Drop Page Builder</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" type="text/css" href="https://demo-dev2.omnisourcegear.com/admin/vendor/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="css/spacing.css">
     <link rel="stylesheet" type="text/css" href="css/styles.css">
-    <!--<script src="https://cdn-script.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> -->
     <script
   src="https://code.jquery.com/jquery-3.7.1.min.js"
   integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
   crossorigin="anonymous"></script>
     <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+
+   
     <script type="text/javascript" src="./js/spacing-lib.js"></script>
     <script type="text/javascript" src="./js/main.js"></script>
    
 
 </head>
 <body>
-    <div class="section-header">
-        <select id="box-selector">
-            <option value="0" disabled="disabled" selected="selected">Please select a box</option>
-            <option value="1">Box 1x1</option>
-            <option value="2">Box 1x2</option>
-            <option value="4">Box 1x4</option>
-        </select>
-        <button id="add-row-btn">Add row</button>
-        <button id="save-btn">Preview page</button>
-        <button id="load-btn">Load page from test html</button>
-    </div>
-    <div id="elements-container"></div>
-    <div class="page-section">
-        <div id="page-container">
-            <div class="row-wrapper">
-                <div class="row-controls">
-                    <button class="move-up"><i class="fas fa-arrow-up"></i></button>
-                    <button class="move-down"><i class="fas fa-arrow-down"></i></button>
-                    <button class="row-remove-btn"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="row"></div>
-            </div>
+    <div class="page-builder">
+        <div class="section-header">
+            <select class="form-control" id="box-selector">
+                <option value="0" disabled="disabled" selected="selected">Please select a box</option>
+                <option value="1">Box 1x1</option>
+                <option value="2">Box 1x2</option>
+                <option value="4">Box 1x4</option>
+            </select>
+            <button id="add-row-btn">Add row</button>
+            <button id="save-btn">Preview page</button>
+            <button id="load-btn">Load page from test html</button>
         </div>
-        <div id="config-box" class="hidden">
-            <div class="config-box-header">
-                <h3>Configuration area <span id="box-name"></span></h3>
-                <div id="spacing-wrapper"></div>
-                <button class="config-remove-btn"><i class="fas fa-times"></i></button>
+        <div id="elements-container"></div>
+        <div class="page-section">
+            <div id="page-container">
+                <div class="row-wrapper">
+                    <div class="row-controls">
+                        <button class="move-up"><i class="fas fa-arrow-up"></i></button>
+                        <button class="move-down"><i class="fas fa-arrow-down"></i></button>
+                        <button class="row-remove-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="row"></div>
+                </div>
             </div>
-            <div class="toggle-container type-toggle">
-                <span>Image</span>
-                <div class="toggle" id="toggleButton"></div>
-                <span>Text</span>
-            </div>
-            <div class="config-box-img-selector" id="config-image">
-                <select id="image-selector" style="display: none;">
-                    <option value="0" disabled="disabled" selected="selected">Please select an option</option>
-                    <option value="1">Single Image</option>
-                    <option value="2">Slideshow</option>
-                </select>
-                <div id="image-upload-wrapper" style="display: none;">
-                    <input type="file" id="image-upload" accept="image/*" hidden>
-                    <label for="image-upload" class="custom-upload-button">
-                        <span class="upload-icon">Add Image</span>
-                    </label>
-                
-                    <div class="slider-config-wrapper" id="slider-config" style="display: none;">
-                        <div class="config-box-row">
-                            <span>Seconds Per Slide:</span>
-                            <input id="secondsPerSlideInput" type="number" class="input-number" min="0">
+            <div id="config-box" class="hidden">
+                <div class="config-box-header">
+                    <h3>Configuration area <span id="box-name"></span></h3>
+                    <div id="spacing-wrapper"></div>
+                    <button class="config-remove-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="toggle-container type-toggle">
+                    <span>Image</span>
+                    <div class="toggle" id="toggleButton"></div>
+                    <span>Text</span>
+                </div>
+                <div class="config-box-img-selector" id="config-image">
+                    <select class="form-control" id="image-selector" style="display: none;">
+                        <option value="0" disabled="disabled" selected="selected">Please select an option</option>
+                        <option value="1">Single Image</option>
+                        <option value="2">Slideshow</option>
+                    </select>
+                    <div id="image-upload-wrapper" style="display: none;">
+                        <input type="file" id="image-upload" accept="image/*" hidden>
+                        <label for="image-upload" class="custom-upload-button">
+                            <span class="upload-icon">Add Image</span>
+                        </label>
+                    
+                        <div class="slider-config-wrapper" id="slider-config" style="display: none;">
+                            <div class="config-box-row">
+                                <span>Seconds Per Slide:</span>
+                                <input id="secondsPerSlideInput" type="number" class="input-number" min="0">
+                            </div>
+                            <div class="config-box-row">
+                                <span>Randomize Order:</span>
+                                <input id="randomizeOrderCheckbox" type="checkbox" class="input-checkbox">
+                            </div>
                         </div>
-                        <div class="config-box-row">
-                            <span>Randomize Order:</span>
-                            <input id="randomizeOrderCheckbox" type="checkbox" class="input-checkbox">
+                        <div class="img-preview-list">
                         </div>
                     </div>
-                    <div class="img-preview-list">
+                </div>
+                <div class="config-box-tools" id="config-text" style="display: none;">
+                    <div class="config-box-text">
+                        <label>Enter box text</label>
+                        <textarea name="text-input" id="text-input" class="rich_text_page_builder"></textarea>
                     </div>
-                </div>
+                </div> 
             </div>
-            <div class="config-box-tools" id="config-text" style="display: none;">
-                <div class="config-box-text">
-                    <label>Enter box text</label>
-                    <textarea name="text-input" id="text-input" class="rich_text_page_builder"></textarea>
-                </div>
-            </div> 
         </div>
     </div>
-    
 </body>
 </html>

@@ -15,6 +15,23 @@ body {
     font-size: 1em;
     font-family: Arial, Helvetica, sans-serif;
     color: var(--gray-sport-80);
+    padding: 15px;
+}
+.page-builder {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-size: 1em;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--gray-sport-80);
+}
+.page-builder label {
+    font-weight: 300;
+    line-height: 1;
+}
+.section-header select.form-control,
+#config-box select.form-control {
+    width: auto;
 }
 input {
     color: var(--gray-sport-80);
@@ -27,6 +44,7 @@ input {
 .section-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     width: 500px;
 }
 #elements-container, #page-container, #config-box {
