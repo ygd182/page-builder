@@ -771,7 +771,8 @@
     function resetBackground() {
         const boxId = $('#config-box').attr('data-box-id');
         const box = $(`#box${boxId}`);
-        box.css('backgroundColor' , '#FFFFFF00');
+        box.css('backgroundColor' , '#FFFFFF');
+        $('.bkg-color-input').val('#FFFFFF');
     }
 
 
