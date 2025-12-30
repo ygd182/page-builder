@@ -62,17 +62,6 @@
         });
     }
 
-    function getAvailableRow(size) {
-        let rows = Array.from(pageContainer.children).filter(row => row.classList.contains("row"));
-        for (let row of rows) {
-            let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
-            if (usedSpace + parseInt(size) <= 4) {
-                return row;
-            }
-        }
-        return null;
-    }
-
     function sizeFitInRow(row, size) {
         let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
         return (usedSpace + parseInt(size) <= 4) 
@@ -407,6 +396,7 @@
         closeImageSelector();
         closeResetSliderConfig();
         $('#spacing-wrapper').empty();
+        $('#config-bkg-img').hide();
     }
 
     function closeImageSelector() {
@@ -774,6 +764,26 @@
         });
     }
 
+    function addResetBackgroundEvent() {
+        $(document).on('click', '.bkg-color-reset-btn', () => resetBackground());
+    }
+
+    function resetBackground() {
+        const boxId = $('#config-box').attr('data-box-id');
+        const box = $(`#box${boxId}`);
+        box.css('backgroundColor' , '#FFFFFF00');
+    }
+
+
+    function addConfigBackgroundChange() {
+        $(document).on('change', ".bkg-color-input", (event) => {
+            const boxId = $('#config-box').attr('data-box-id');
+            const box = $(`#box${boxId}`);
+            box.css('backgroundColor' , event.target.value);
+            event.stopPropagation();
+        });
+    }
+
     function addRowEvents() {
         $(document).on('click', '.move-up', (event) => moveRowUp(event.target.closest(".row-wrapper")));
         $(document).on('click', '.move-down', (event) => moveRowDown(event.target.closest(".row-wrapper")));
@@ -787,6 +797,8 @@
         addConfigToggleEvent();
         addImageUploadEvent();
         addSliderConfigEvents();
+        addConfigBackgroundChange();
+        addResetBackgroundEvent();
     }
 
     function addCKEditor() {
@@ -992,11 +1004,12 @@
                   //  closeResetSliderConfig();
                     singleImage = true;
                     box.removeClass('slider');
+                    $('#config-bkg-img').show();
                 } else {
                     //slider
                     singleImage = false;
                     $('#slider-config-wrapper').show();
-                    
+                    $('#config-bkg-img').hide();
                     box.addClass('slider')
                 }
             } else {
