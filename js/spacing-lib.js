@@ -11,13 +11,13 @@ const spacingLib = (function () {
             const $title = $('<div class="wp-spacing-title"></div>').text(title);
 
             // 🔗 LINKED BUTTON
-            const $linkBtn = $('<button type="button" class="wp-spacing-link-btn btn btn-default"></button>')
+            const $linkBtn = $('<button type="button" class="wp-spacing-link-btn"></button>')
                 .attr("data-linked", "true")
                 .text("🔗");
 
             // 📏 UNIT SELECTOR
             const $unitSelector = $(`
-                <select class="wp-spacing-unit form-control">
+                <select class="wp-spacing-unit">
                     <option value="px">px</option>
                     <option value="%">%</option>
                 </select>
@@ -51,7 +51,9 @@ const spacingLib = (function () {
             $grid.on("input", ".wp-spacing-input", function (event) {
                 event.preventDefault();
                 event.stopPropagation();
-                const linked = $linkBtn.attr("data-linked") === "true";
+                
+				const linked = $linkBtn.attr("data-linked") === "true";
+
                 if (!linked) return;
 
                 const val = $(this).val();
@@ -81,7 +83,7 @@ const spacingLib = (function () {
                     group: title,
                     direction: dir,
                     value: val,
-                    unit: unit,
+                    unit: (!isNaN(parseInt(val))) ? unit : "", //clear unit if val is not a number
                     linked: linked
                 };
                 
@@ -105,7 +107,7 @@ const spacingLib = (function () {
                     $(this).attr("data-linked", "true").text("🔗");
 
                     const firstVal = $grid.find(".wp-spacing-input").first().val();
-                    $grid.find(".wp-spacing-input").val(firstVal);
+                    $grid.find(".wp-spacing-input").val(firstVal).trigger("change");
                 }
                 $unitSelector.trigger('change');
             });
@@ -124,7 +126,7 @@ const spacingLib = (function () {
                         group: title,
                         direction: $(this).data("direction"),
                         value: $(this).val(),
-                        unit: unit,
+						unit: (!isNaN(parseInt($(this).val()))) ? unit : "", //clear unit if val is not a number
                         linked: $linkBtn.attr("data-linked") === "true"
                     };
 
@@ -145,12 +147,23 @@ const spacingLib = (function () {
 
             if (!$container.length) return;
 
+			/* doing it this way caused edits to always reference the last row
             const $margin = create4InputGroup("Margin");
             const $padding = create4InputGroup("Padding");
             const $row = $('<div class="wp-spacing-row"></div>');
 
             $row.append($margin, $padding);
             $container.append($row);
+			*/
+
+			$container.each(function(){
+				const $margin = create4InputGroup("Margin");
+				const $padding = create4InputGroup("Padding");
+				const $row = $('<div class="wp-spacing-row"></div>');
+
+				$row.append($margin, $padding);
+				$(this).append($row);
+			});
         }
 
 
@@ -159,16 +172,32 @@ const spacingLib = (function () {
          * -----------------------------------------------------------*/
         function applyToPreview(data) {
             if (!appliedTargets) return;
-            
 
             let cssProp = `${data.group.toLowerCase()}`;
             if (!data.linked) {
                 cssProp = `${data.group.toLowerCase()}-${data.direction}`;
+
+				//delete the common property if not linked
+				appliedTargets.removeAttr(`data-${data.group.toLowerCase()}`);
             }
+			else {
+				//if linked, delete the individual values
+				appliedTargets.removeAttr(`data-${data.group.toLowerCase()}-top`);
+				appliedTargets.removeAttr(`data-${data.group.toLowerCase()}-right`);
+				appliedTargets.removeAttr(`data-${data.group.toLowerCase()}-bottom`);
+				appliedTargets.removeAttr(`data-${data.group.toLowerCase()}-left`);
+			}
+
             const finalValue = data.value + data.unit;
 
-            appliedTargets.attr(`data-${cssProp}`, '');
-            appliedTargets.attr(`data-${cssProp}`, finalValue);
+			if (isNaN(parseInt(data.value))){
+				//do not store if not a value
+				appliedTargets.removeAttr(`data-${cssProp}`);
+			}
+			else {
+				appliedTargets.attr(`data-${cssProp}`, '');
+	            appliedTargets.attr(`data-${cssProp}`, finalValue);
+			}
         }
 
         /** ------------------------------------------------------------
@@ -181,71 +210,75 @@ const spacingLib = (function () {
         /** ------------------------------------------------------------
          *   LOAD EXISTING VALUES FROM data-* ATTRIBUTES
          * -----------------------------------------------------------*/
-        function loadFromElement($wrapper, $target) {
-            if (!$target || !$target.length) return;
+        function loadFromElement($wrapper, $targets) {
+            if (!$targets || !$targets.length) return;
 
-            // CASE 1: configuring a box → look inside #spacing-wrapper
-            let $container = $wrapper.closest('#config-box').find('#spacing-wrapper');
-            // CASE 2: configuring a row → look inside row-wrapper
-            if (!$container.length || $container.children().length === 0) {
-                $container = $target.closest('.row-wrapper');
-            }
+			$targets.each(function(){
+				var $target = $(this);
 
-            if (!$container.length) return;
+				// CASE 1: configuring a box → look inside #spacing-wrapper
+				let $container = $wrapper.closest('#config-box').find('#spacing-wrapper');
+				// CASE 2: configuring a row → look inside row-wrapper
+				if (!$container.length || $container.children().length === 0) {
+					$container = $target.closest('.row-wrapper');
+				}
 
-            const $groups = $container.find('.wp-spacing-group');
+				if (!$container.length) return;
 
-            $groups.each(function() {
-                const $group = $(this);
-                const groupName = $group.find('.wp-spacing-title').text().toLowerCase(); // margin or padding
-                const $unitSelector = $group.find('.wp-spacing-unit');
-                const $inputs = $group.find('.wp-spacing-input');
-                const $linkBtn = $group.find('.wp-spacing-link-btn');
+				const $groups = $container.find('.wp-spacing-group');
 
-                // Read existing data attributes
-                let values = {};
-                $inputs.each(function() {
-                    const dir = $(this).data("direction");
+				$groups.each(function() {
+					const $group = $(this);
+					const groupName = $group.find('.wp-spacing-title').text().toLowerCase(); // margin or padding
+					const $unitSelector = $group.find('.wp-spacing-unit');
+					const $inputs = $group.find('.wp-spacing-input');
+					const $linkBtn = $group.find('.wp-spacing-link-btn');
 
-                    // data-margin-left, data-padding-top, etc.
-                    const attrVal = $target.attr(`data-${groupName}-${dir}`)
-                                || $target.attr(`data-${groupName}`); // fallback (linked)
+					// Read existing data attributes
+					let values = {};
+					$inputs.each(function() {
+						const dir = $(this).data("direction");
 
-                    values[dir] = attrVal || "";
-                });
+						// data-margin-left, data-padding-top, etc.
+						const attrVal = $target.attr(`data-${groupName}-${dir}`)
+									|| $target.attr(`data-${groupName}`); // fallback (linked)
 
-                // Determine linked state:
-                // - linked if all 4 values match
-                // - linked if all are empty
-                const vals = Object.values(values);
+						values[dir] = attrVal || "";
+					});
 
-                // Check if ALL are empty → linked
-                const allEmpty = vals.every(v => v === "");
+					// Determine linked state:
+					// - linked if all 4 values match
+					// - linked if all are empty
+					const vals = Object.values(values);
 
-                // Check if ALL are equal (and not empty)
-                const allEqual = vals.every(v => v === vals[0]) && vals[0] !== "";
+					// Check if ALL are empty → linked
+					const allEmpty = vals.every(v => v === "");
 
-                // Final linked state
-                const linked = allEmpty || allEqual;
+					// Check if ALL are equal (and not empty)
+					const allEqual = vals.every(v => v === vals[0]) && vals[0] !== "" && vals[0] !== "px"; //blank boxes can have just px
 
-                // Apply linked icon state
-                $linkBtn
-                    .attr("data-linked", linked ? "true" : "false")
-                    .text(linked ? "🔗" : "🔓");
+					// Final linked state
+					const linked = allEmpty || allEqual;
 
-                // Fill input values
-                $inputs.each(function() {
-                    const dir = $(this).data("direction");
-                    const v = values[dir];
-                    if (!v) return;
+					// Apply linked icon state
+					$linkBtn
+						.attr("data-linked", linked ? "true" : "false")
+						.text(linked ? "🔗" : "🔓");
 
-                    const m = v.match(/^([0-9.]+)(px|%)?$/);
-                    if (!m) return;
+					// Fill input values
+					$inputs.each(function() {
+						const dir = $(this).data("direction");
+						const v = values[dir];
+						if (!v) return;
 
-                    $(this).val(m[1]);
-                    $unitSelector.val(m[2] || "px");
-                });
-            });
+						const m = v.match(/^([0-9.]+)(px|%)?$/);
+						if (!m) return;
+
+						$(this).val(m[1]);
+						$unitSelector.val(m[2] || "px");
+					});
+				});
+			});
         }
 
 
