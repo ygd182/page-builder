@@ -80,7 +80,8 @@ input {
 .row-wrapper {
     position: relative;
 }
-.page-builder .row {
+.page-builder .row,
+.page-builder-preview .row {
     display: flex;
     width: 100%;
     border-bottom: 1px solid #ddd;
