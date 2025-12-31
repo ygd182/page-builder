@@ -543,7 +543,7 @@
                     error: function(xhr, status, error) {
                         console.log("fail");
                         console.log(arguments);
-                        imageErrorHardcodedUpload(file);
+                        //imageErrorHardcodedUpload(file);
                     }
                 });
             }
