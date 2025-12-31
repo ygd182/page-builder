@@ -30,7 +30,6 @@
         } else {
             $("#image-upload").prop('disabled', false);
             $('#slider-config').hide();
-            console.log($('#image-upload'));
         }
     }
 
@@ -544,7 +543,7 @@
                     error: function(xhr, status, error) {
                         console.log("fail");
                         console.log(arguments);
-                        //imageErrorHardcodedUpload(file);
+                        imageErrorHardcodedUpload(file);
                     }
                 });
             }
