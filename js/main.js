@@ -405,11 +405,39 @@
         $('#image-upload-wrapper').hide();
     }
 
+    function rgbToHex(color) {
+        if (!color) return null;
+
+        const match = color
+            .replace(/\s+/g, '')
+            .match(/^rgba?\((\d+),(\d+),(\d+)(?:,([\d.]+))?\)$/i);
+
+        if (!match) return null;
+
+        let r = parseInt(match[1], 10);
+        let g = parseInt(match[2], 10);
+        let b = parseInt(match[3], 10);
+        let a = match[4] !== undefined
+            ? Math.round(parseFloat(match[4]) * 255)
+            : null;
+
+        const toHex = v => v.toString(16).padStart(2, '0');
+
+        return (
+            '#' +
+            toHex(r) +
+            toHex(g) +
+            toHex(b) +
+            (a !== null ? toHex(a) : '')
+        );
+    }
 
     function loadTextAndBkg() {
         const boxId = $('#config-box').attr('data-box-id');
         const box = $(`#box${boxId}`);
-
+        const bkgColor = rgbToHex(box.css('backgroundColor')) || '#FFFFFF';
+        console.log(bkgColor);
+        $('.bkg-color-input').val(bkgColor);
         const html = box.find('.box-text')
 
         // Ensure CKEditor instance exists before using it
