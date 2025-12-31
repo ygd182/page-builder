@@ -62,17 +62,6 @@
         });
     }
 
-    function getAvailableRow(size) {
-        let rows = Array.from(pageContainer.children).filter(row => row.classList.contains("row"));
-        for (let row of rows) {
-            let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
-            if (usedSpace + parseInt(size) <= 4) {
-                return row;
-            }
-        }
-        return null;
-    }
-
     function sizeFitInRow(row, size) {
         let usedSpace = Array.from(row.children).reduce((sum, el) => sum + parseInt(el.dataset.size || 0), 0);
         return (usedSpace + parseInt(size) <= 4) 
@@ -95,7 +84,7 @@
     
     function addRemoveButton(actions) {
         const removeBtn = document.createElement("button");
-        removeBtn.innerHTML = "<i class='fas fa-times'></i>";
+        removeBtn.innerHTML = "<i class='fa fa-times'></i>";
         removeBtn.classList.add("remove-btn");
         addRemoveButtonClickEvent($(removeBtn));
         actions.appendChild(removeBtn);
@@ -103,7 +92,7 @@
 
     function addNewRow() {
         closeConfig();
-        const newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up"><i class="fas fa-arrow-up"></i></button><button class="move-down"><i class="fas fa-arrow-down"></i></button><button class="row-remove-btn"><i class="fas fa-times"></i></button></div><div class="row"></div></div>';
+        const newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up"><i class="fa fa-arrow-up"></i></button><button class="move-down"><i class="fa fa-arrow-down"></i></button><button class="row-remove-btn"><i class="fa fa-times"></i></button></div><div class="row"></div></div>';
         const $newRow = $(newRow);
       
 
@@ -189,7 +178,6 @@
         
         const fileReader = document.getElementById("image-upload");
         fileReader.value = null;
-    
 
         configBox.className = '';
         const spacingEl = $(configBox).find('#spacing-wrapper');
@@ -408,6 +396,7 @@
         closeImageSelector();
         closeResetSliderConfig();
         $('#spacing-wrapper').empty();
+        $('#config-bkg-img').hide();
     }
 
     function closeImageSelector() {
@@ -416,11 +405,39 @@
         $('#image-upload-wrapper').hide();
     }
 
+    function rgbToHex(color) {
+        if (!color) return null;
+
+        const match = color
+            .replace(/\s+/g, '')
+            .match(/^rgba?\((\d+),(\d+),(\d+)(?:,([\d.]+))?\)$/i);
+
+        if (!match) return null;
+
+        let r = parseInt(match[1], 10);
+        let g = parseInt(match[2], 10);
+        let b = parseInt(match[3], 10);
+        let a = match[4] !== undefined
+            ? Math.round(parseFloat(match[4]) * 255)
+            : null;
+
+        const toHex = v => v.toString(16).padStart(2, '0');
+
+        return (
+            '#' +
+            toHex(r) +
+            toHex(g) +
+            toHex(b) +
+            (a !== null ? toHex(a) : '')
+        );
+    }
 
     function loadTextAndBkg() {
         const boxId = $('#config-box').attr('data-box-id');
         const box = $(`#box${boxId}`);
-
+        const bkgColor = rgbToHex(box.css('backgroundColor')) || '#FFFFFF';
+        console.log(bkgColor);
+        $('.bkg-color-input').val(bkgColor);
         const html = box.find('.box-text')
 
         // Ensure CKEditor instance exists before using it
@@ -508,7 +525,7 @@
                                 .attr("data-id", nextImgId);
 
                             var $box = $("#" + selectedBox.id);
-                            $box.find("img.box-image").remove();
+                            //$box.find("img.box-image").remove();
                             $box.append($img);
                             addPreviewImage({file, url: response.url},selectedBox.dataset.id, nextImgId - 1);
                             updateInputImgState(selectedBox.dataset.id);
@@ -520,24 +537,6 @@
                     error: function(xhr, status, error) {
                         console.log("fail");
                         console.log(arguments);
-                        //$("#status").html("Upload failed: " + error);
-                        //TODO to remove these lines when integrating back to the admin
-                        var response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/5-20241106-100659567-1920x6501.jpg'}
-                        var $box = $("#" + selectedBox.id);
-                        var nextImgId = $box.find("img.box-image").length + 1;
-                        $img = $("<img />").attr("src", response.url)
-                                .addClass("box-image")
-                                .attr("data-url", "")
-                                .attr("data-motion", false)
-                                .attr("data-alt", "")
-                                .attr("data-title", "")
-                                .attr("data-id", nextImgId);
-
-                            var $box = $("#" + selectedBox.id);
-                  //          $box.find("img.box-image").remove();
-                            $box.append($img);
-                        addPreviewImage({file, url: response.url},selectedBox.dataset.id, nextImgId - 1);
-                        updateInputImgState(selectedBox.dataset.id);
                     }
                 });
             }
@@ -793,6 +792,27 @@
         });
     }
 
+    function addResetBackgroundEvent() {
+        $(document).on('click', '.bkg-color-reset-btn', () => resetBackground());
+    }
+
+    function resetBackground() {
+        const boxId = $('#config-box').attr('data-box-id');
+        const box = $(`#box${boxId}`);
+        box.css('backgroundColor' , '#FFFFFF');
+        $('.bkg-color-input').val('#FFFFFF');
+    }
+
+
+    function addConfigBackgroundChange() {
+        $(document).on('change', ".bkg-color-input", (event) => {
+            const boxId = $('#config-box').attr('data-box-id');
+            const box = $(`#box${boxId}`);
+            box.css('backgroundColor' , event.target.value);
+            event.stopPropagation();
+        });
+    }
+
     function addRowEvents() {
         $(document).on('click', '.move-up', (event) => moveRowUp(event.target.closest(".row-wrapper")));
         $(document).on('click', '.move-down', (event) => moveRowDown(event.target.closest(".row-wrapper")));
@@ -806,16 +826,20 @@
         addConfigToggleEvent();
         addImageUploadEvent();
         addSliderConfigEvents();
+        addConfigBackgroundChange();
+        addResetBackgroundEvent();
     }
 
     function addCKEditor() {
         // Set up ckeditor on the rich text boxes
-		$(".rich_text_page_builder").each(function(){
+		$("#text-input").each(function(){
 			if (typeof $(this).attr("id") != "undefined"){
 				CKEDITOR.replace($(this).attr("id"), {
+					extraPlugins: 'colorbutton,colordialog',
 					toolbar: [
-						{ name: 'document', groups: [ 'mode', 'document', 'doctools' ], items: [ 'Source' ] },
+						//{ name: 'document', groups: [ 'mode', 'document', 'doctools' ], items: [ 'Source' ] },
 						{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ], items: [ 'Bold', 'Italic', 'Superscript'] },
+						{ name: 'colors', items: [ 'TextColor', 'BGColor' ] }, //'fontsize', 'fontColor', 'fontBackgroundColor', 
 						{ name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi' ], items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent' ] },
 						{ name: 'links', items: [ 'Link', 'Unlink', 'Anchor' ] }
 					]
@@ -839,10 +863,12 @@
         // Recreate CKEditor if it doesn't exist
         if (!CKEDITOR.instances["text-input"]) {
             CKEDITOR.replace("text-input", {
-                toolbar: [
-                    { name: 'document', groups: [ 'mode', 'document', 'doctools' ], items: [ 'Source' ] },
+                extraPlugins: 'colorbutton,colordialog',
+				toolbar: [
+                    //{ name: 'document', groups: [ 'mode', 'document', 'doctools' ], items: [ 'Source' ] },
                     { name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ], items: [ 'Bold', 'Italic', 'Superscript'] },
-                    { name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi' ], items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent' ] },
+					{ name: 'colors', items: [ 'TextColor', 'BGColor' ] }, //'fontsize', 'fontColor', 'fontBackgroundColor', 
+					{ name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi' ], items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent' ] },
                     { name: 'links', items: [ 'Link', 'Unlink', 'Anchor' ] }
                 ]
             });
@@ -930,9 +956,9 @@
             // Create row-controls
             const $controls = $(`
                 <div class="row-controls">
-                    <button class="move-up"><i class="fas fa-arrow-up"></i></button>
-                    <button class="move-down"><i class="fas fa-arrow-down"></i></button>
-                    <button class="row-remove-btn"><i class="fas fa-times"></i></button>
+                    <button class="move-up"><i class="fa fa-arrow-up"></i></button>
+                    <button class="move-down"><i class="fa fa-arrow-down"></i></button>
+                    <button class="row-remove-btn"><i class="fa fa-times"></i></button>
                 </div>
             `);
 
@@ -968,7 +994,7 @@
             if ($box.find(".box-actions").length === 0) {
                 $box.prepend(`
                     <div class="box-actions">
-                        <button class="remove-btn"><i class="fas fa-times"></i></button>
+                        <button class="remove-btn"><i class="fa fa-times"></i></button>
                     </div>
                 `);
             }
@@ -1007,11 +1033,12 @@
                   //  closeResetSliderConfig();
                     singleImage = true;
                     box.removeClass('slider');
+                    $('#config-bkg-img').show();
                 } else {
                     //slider
                     singleImage = false;
                     $('#slider-config-wrapper').show();
-                    
+                    $('#config-bkg-img').hide();
                     box.addClass('slider')
                 }
             } else {
@@ -1034,12 +1061,29 @@
         addSpacingControlToRow($rowWrapper, $row);
     }
 
+	function setStartingIDCounter(){
+		//for new pages, the counter is set to zero, if an edit, we need to get the max already used
+		var idCounterExisting = 0;
+
+		$("#page-container").find("div[data-name]").each(function(){
+			var name = $(this).data("name").toString(), v;
+			v = parseInt(name.replace(/[^0-9]/g, ""));
+			if (isNaN(v)) v = 0;
+			if (v > idCounterExisting) idCounterExisting = v;
+		});
+
+		idCounter = idCounterExisting + 1;
+	}
+
 
     $(document).ready(() => {
         elementsContainer = document.getElementById("elements-container");
         pageContainer = document.getElementById("page-container");
         previewElement = document.createElement("div");
         previewElement.classList.add("preview");
+
+		setStartingIDCounter();
+
         addspacingToExistingRow();
         addNewRowEvent();
         addBoxClickEvent();
@@ -1052,6 +1096,5 @@
 
         addSaveEvent();
         addLoadEvent()
-     
     });
 })();

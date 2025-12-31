@@ -5,7 +5,7 @@
     --gray-100: #1f1f1f;
 
 
-    --box-bkg: #00000000;
+    --box-bkg: #FFFFFF;
 }
 /*style to replicate initial size*/
 html {
@@ -433,4 +433,13 @@ select#image-selector {
 /*TODO to be removed when the api kay is used*/
 .cke_notification_warning {
     display: none!important;
+}
+
+.config-box-color-row {
+    display: flex;
+    gap: 10px;
+}
+
+.bkg-color-input {
+    width: 45px;
 }
