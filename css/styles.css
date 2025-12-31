@@ -7,11 +7,8 @@
 
     --box-bkg: #FFFFFF;
 }
-/*style to replicate initial size*/
-html {
-    font-size: 14px;
-}
 
+/*
 body {
     font-family: Arial, sans-serif;
     display: flex;
@@ -20,9 +17,11 @@ body {
     font-size: 1em;
     font-family: Arial, Helvetica, sans-serif;
     color: var(--gray-sport-80);
-    padding: 15px;
 }
+*/
+
 .page-builder {
+    font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -30,29 +29,32 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     color: var(--gray-sport-80);
 }
+
 .page-builder label {
     font-weight: 300;
     line-height: 1;
 }
-.section-header select.form-control,
+
+.page-builder .section-header select.form-control,
 #config-box select.form-control {
     width: auto;
 }
-input {
+
+.page-builder input {
     color: var(--gray-sport-80);
     height: 24px;
 }
-.page-section {
+.page-builder .page-section {
     display: flex;
     gap: 165px
 }
-.section-header {
+.page-builder .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 600px;
 }
-#elements-container, #page-container, #config-box {
+.page-builder #elements-container, .page-builder #page-container, .page-builder #config-box {
     width: 624px;
     min-height: 400px;
     padding: 10px;
@@ -60,28 +62,27 @@ input {
     position: relative;
     box-sizing: border-box;
 }
-#page-container {
+.page-builder #page-container {
     height: 100%;
     min-width: 624px;
     padding: 5px;
 }
-#config-box {
+.page-builder #config-box {
     min-height: 360px;
     width: 500px;
 }
-#elements-container {
+.page-builder #elements-container {
     min-height: 187px;
     height: 164px;
     padding: 17px 5px;
 }
-.hidden{
+.page-builder .hidden{
     display: none;
 }
-.row-wrapper {
+.page-builder .row-wrapper {
     position: relative;
 }
-.page-builder .row,
-.page-builder-preview .row {
+.page-builder .row {
     display: flex;
     width: 100%;
     border-bottom: 1px solid #ddd;
@@ -90,7 +91,7 @@ input {
     padding: 18px 0;
     margin: 0;
 }
-.row-controls {
+.page-builder .row-controls {
     position: absolute;
     top: 0px;
     right: -90px;
@@ -98,7 +99,7 @@ input {
     gap: 5px;
     z-index: 1;
 }
-.row-controls button {
+.page-builder .row-controls button {
     background: #007bff;
     color: white;
     border: none;
@@ -107,7 +108,7 @@ input {
     font-size: 12px;
     line-height: 1;
 }
-.row-controls button.row-remove-btn {
+.page-builder .row-controls button.row-remove-btn {
     background-color: red;
     color: white;
     border: none;
@@ -119,11 +120,11 @@ input {
     text-align: center;
     cursor: pointer;
 }
-.row-controls button:disabled {
+.page-builder .row-controls button:disabled {
     background: #ccc;
     cursor: default;
 }
-.box {
+.page-builder .box {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -137,19 +138,19 @@ input {
     border: 1px solid #acacac;
     aspect-ratio: 1 / 1;
 }
-.box-text {
+.page-builder .box-text {
     overflow: hidden;
     text-overflow: ellipsis;
     height: 100%;
 }
-.box.slider:before {
+.page-builder .box.slider:before {
     content: 'Slider';
     position: absolute;
     left: 5px;
     top: 5px;
     font-size: 14px;
 }
-.box-actions {
+.page-builder .box-actions {
     position: absolute;
     top: 8px;
     right: 2px;
@@ -157,11 +158,11 @@ input {
     gap: 2px;
     display: none;
 }
-.box:hover .box-header,
-.box:hover .box-actions {
+.page-builder .box:hover .box-header,
+.page-builder .box:hover .box-actions {
     display: flex;
 }
-.box-header {
+.page-builder .box-header {
     top: -12px;
     left: 0;
     background-color: #2a2929;
@@ -171,7 +172,7 @@ input {
     color: yellow;
     display: none;
 }
-.remove-btn {
+.page-builder .remove-btn {
     background: red;
     color: white;
     border: none;
@@ -183,7 +184,7 @@ input {
     text-align: center;
     cursor: pointer;
 }
-.config-toggle {
+.page-builder .config-toggle {
     border: none;
     border-radius: 50%;
     width: 20px;
@@ -195,23 +196,23 @@ input {
     color: white;
     border: none;
 }
-.col-1 { width: 25%; }
-.col-2 { width: 50%; }
-.col-4 { width: 100%; }
-.preview {
+.page-builder .col-1 { width: 25%; }
+.page-builder .col-2 { width: 50%; }
+.page-builder .col-4 { width: 100%; }
+.page-builder .preview {
     background-color: rgba(0, 0, 255, 0.3);
     pointer-events: none;
 }
-.config-box-header {
+.page-builder .config-box-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 5px;
 }
-.config-box-header h3 {
+.page-builder .config-box-header h3 {
     margin-top: 0;
 }
-.config-remove-btn {
+.page-builder .config-remove-btn {
     background-color: red;
     color: white;
     border: none;
@@ -223,36 +224,36 @@ input {
     text-align: center;
     cursor: pointer;
 }
-.config-box-img-selector {
+.page-builder .config-box-img-selector {
     display: block;
     width: 100%;
     margin-bottom: 10px;
 }
-.config-box-tools {
+.page-builder .config-box-tools {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-top: 10px;
 }
-.config-box-text,
-.config-box-color,
-.config-box-color {
+.page-builder .config-box-text,
+.page-builder .config-box-color,
+.page-builder .config-box-color {
     display: flex;
     flex-direction: column;
     width: 100%;
 }
-.config-box-row {
+.page-builder .config-box-row {
     display: flex;
     align-items: center;
     gap: 10px;
 }
-.img-preview-list {
+.page-builder .img-preview-list {
     display: flex;
     flex-direction: column;
     gap: 5px;
     margin: 10px 0;
 }
-.preview-img-wrapper {
+.page-builder .preview-img-wrapper {
     position: relative;
     border: 1px solid #a7a6a6;
     width: 50px;
@@ -260,7 +261,7 @@ input {
     display: flex;
     align-items: center;
 }
-.preview-item {
+.page-builder .preview-item {
     display: grid;
     grid-template-columns: 54px 1fr;
     align-items: flex-start;
@@ -268,11 +269,11 @@ input {
     border-bottom: 1px solid #ddd;
     padding: 5px 0;
 }
-.preview-item input {
+.page-builder .preview-item input {
     width: 100%;
     box-sizing: border-box;
 }
-.remove-img-btn {
+.page-builder .remove-img-btn {
     color: var(--gray-sport-80);
     border: none;
     font-size: 35px;
@@ -283,45 +284,47 @@ input {
     justify-content: center;
     cursor: pointer;
 }
-.img-preview-list img,
-img.box-image {
+.page-builder .img-preview-list img,
+.page-builder img.box-image {
     display: block;
     width: 100%;
     height: 100%; 
     object-fit: contain;
 }
-.img-upload-wrapper {
+.page-builder .img-upload-wrapper {
     color: transparent;
     margin-bottom: 10px;
 }
-button,
-.custom-upload-button {
-    display: inline-flex;
+.page-builder button,
+.page-builder .custom-upload-button {
+    /*display: inline-flex;*/
     align-items: center;
     justify-content: center;
+    /*
     padding: 1px 6px;
     background-color: rgb(239, 239, 239); /* Light gray background */
     color: #333; /* Dark gray icon color */
+    */
     cursor: pointer;
     border-radius: 2px;
     border: 1px solid black;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
-    font-size: 13px;
+    /*font-size: 13px;*/
 }
-button:hover,
-.custom-upload-button:hover {
+.page-builder button:hover,
+.page-builder .custom-upload-button:hover {
     box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* More depth on hover */
 }
 
 /* Hide the default file input */
-#image-upload {
+.page-builder #image-upload {
     display: none;
 }
-#image-upload:disabled + .custom-upload-button {
+.page-builder #image-upload:disabled + .custom-upload-button {
     background-color: rgba(239, 239, 239, 0.3);
     color: rgba(16, 16, 16, 0.3);
 }
-.toggle-container {
+.page-builder .toggle-container {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -329,12 +332,12 @@ button:hover,
     font-size: 16px;
 }
 
-.type-toggle {
+.page-builder .type-toggle {
     margin-bottom: 10px;
 }
 
 /* Toggle Switch */
-.toggle {
+.page-builder .toggle {
     position: relative;
     width: 50px;
     height: 25px;
@@ -345,7 +348,7 @@ button:hover,
 }
 
 /* Toggle Circle */
-.toggle::before {
+.page-builder .toggle::before {
     content: "";
     position: absolute;
     width: 20px;
@@ -359,71 +362,68 @@ button:hover,
 }
 
 /* Active Toggle */
-.toggle.active {
+.page-builder .toggle.active {
     background-color: #4caf50;
 }
 
-.toggle.active::before {
+.page-builder .toggle.active::before {
     left: 27px;
 }
-label {
+.page-builder label {
     margin-bottom: 5px;
 }
-i, svg { pointer-events: none; }
+.page-builder i, .page-builder svg { pointer-events: none; }
 
-.image-center-content {
+.page-builder .image-center-content {
     display: flex;
     flex-direction: column;
     gap: 5px;
 }
 
-.image-content-row {
+.page-builder .image-content-row {
     display: grid;
     grid-template-columns: 35px 1fr;
     gap: 2px;
 }
 
-.slider-config-wrapper {
+.page-builder .slider-config-wrapper {
     display: none;
 }
 
-.input-number {
+.page-builder .input-number {
     width: 50px;
     height: 24px;
     box-sizing: border-box;
 }
 
-.input-checkbox {
+.page-builder .input-checkbox {
     width: 18px;
     height: 18px;
 }
 
-select#image-selector {
+.page-builder select#image-selector {
+    height: 21.5px;
     margin-bottom: 10px;
 }
 
-.box.slider .box-image {
+.page-builder .box.slider .box-image {
     display: none;
 }
-.box.slider .box-image:last-of-type {
+.page-builder .box.slider .box-image:last-of-type {
     display: block;
 }
 
-#spacing-wrapper {
+.page-builder #spacing-wrapper {
     position: relative;
 }
 
-#spacing-wrapper .wp-spacing-row {
-    
-}
-
-.row-wrapper .wp-spacing-row {
+.page-builder .row-wrapper .wp-spacing-row {
     position: absolute;
-    left: calc(100% + 20px);
+    left: calc(100% + 15px); /* 20px */
     bottom: 10px;
 }
 
-.row-wrapper .wp-spacing-row {
+.page-builder .row-wrapper .wp-spacing-row {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -432,15 +432,22 @@ select#image-selector {
 }
 
 /*TODO to be removed when the api kay is used*/
-.cke_notification_warning {
+.page-builder .cke_notification_warning {
     display: none!important;
 }
 
-.config-box-color-row {
+/* override bootstrap 
+#page-container .row {
+	margin-left: 0;
+	margin-right: 0;
+}*/
+
+.page-builder .config-box-color-row {
     display: flex;
     gap: 10px;
 }
 
-.bkg-color-input {
+.page-builder .bkg-color-input {
     width: 45px;
+    height: 34px;
 }

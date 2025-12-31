@@ -86,13 +86,14 @@
         const removeBtn = document.createElement("button");
         removeBtn.innerHTML = "<i class='fa fa-times'></i>";
         removeBtn.classList.add("remove-btn");
+		removeBtn.type = "button";
         addRemoveButtonClickEvent($(removeBtn));
         actions.appendChild(removeBtn);
     }
 
     function addNewRow() {
         closeConfig();
-        const newRow = '<div class="row-wrapper"><div class="row-controls"><button class="move-up"><i class="fa fa-arrow-up"></i></button><button class="move-down"><i class="fa fa-arrow-down"></i></button><button class="row-remove-btn"><i class="fa fa-times"></i></button></div><div class="row"></div></div>';
+        const newRow = '<div class="row-wrapper"><div class="row-controls"><button type="button" class="move-up"><i class="fa fa-arrow-up"></i></button><button type="button" class="move-down"><i class="fa fa-arrow-down"></i></button><button type="button" class="row-remove-btn"><i class="fa fa-times"></i></button></div><div class="row"></div></div>';
         const $newRow = $(newRow);
       
 
@@ -204,6 +205,7 @@
         const removeBtn = document.createElement("a");
         removeBtn.textContent = "Remove Image";
         removeBtn.classList.add("remove-img-link");
+		removeBtn.type = "button";
         removeBtn.href = '';
         removeBtn.addEventListener("click", (event) => {
             event.preventDefault();
@@ -722,11 +724,11 @@
             if (newWindow) {
                 // Get the document object of the new window
                 const newDoc = newWindow.document;
-                
 
                 // Write the dynamic HTML content to the new document
                 newDoc.write(generateOutputPage().html());
-                newDoc.body.classList.add("page-builder-preview");
+                newDoc.body.classList.add("page-builder");
+                
                 const cssLink = newWindow.document.createElement("link");
                 cssLink.rel = "stylesheet";
                 cssLink.type = "text/css";
@@ -958,9 +960,9 @@
             // Create row-controls
             const $controls = $(`
                 <div class="row-controls">
-                    <button class="move-up"><i class="fa fa-arrow-up"></i></button>
-                    <button class="move-down"><i class="fa fa-arrow-down"></i></button>
-                    <button class="row-remove-btn"><i class="fa fa-times"></i></button>
+                    <button type="button" class="move-up"><i class="fa fa-arrow-up"></i></button>
+                    <button type="button" class="move-down"><i class="fa fa-arrow-down"></i></button>
+                    <button type="button" class="row-remove-btn"><i class="fa fa-times"></i></button>
                 </div>
             `);
 
@@ -996,7 +998,7 @@
             if ($box.find(".box-actions").length === 0) {
                 $box.prepend(`
                     <div class="box-actions">
-                        <button class="remove-btn"><i class="fa fa-times"></i></button>
+                        < type="button" class="remove-btn"><i class="fa fa-times"></i></>
                     </div>
                 `);
             }
