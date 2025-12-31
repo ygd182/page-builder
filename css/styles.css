@@ -82,8 +82,7 @@ body {
 .page-builder .row-wrapper {
     position: relative;
 }
-.page-builder .row,
-.page-builder-preview .row {
+.page-builder .row {
     display: flex;
     width: 100%;
     border-bottom: 1px solid #ddd;

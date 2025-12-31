@@ -727,7 +727,7 @@
 
                 // Write the dynamic HTML content to the new document
                 newDoc.write(generateOutputPage().html());
-                newDoc.body.classList.add("page-builder-preview");
+                newDoc.body.classList.add("page-builder");
                 
                 const cssLink = newWindow.document.createElement("link");
                 cssLink.rel = "stylesheet";
