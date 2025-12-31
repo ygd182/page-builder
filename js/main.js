@@ -30,7 +30,6 @@
         } else {
             $("#image-upload").prop('disabled', false);
             $('#slider-config').hide();
-          //  $selector.val(0);
         }
     }
 
@@ -359,7 +358,10 @@
         box.appendChild(div);
     }
 
-    function moveRowUp(row) {
+    function moveRowUp(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const row = event.target.closest(".row-wrapper");
         closeConfig();
         let prevRow = row.previousElementSibling;
         if (prevRow) {
@@ -367,7 +369,10 @@
         }
     }
 
-    function moveRowDown(row) {
+    function moveRowDown(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const row = event.target.closest(".row-wrapper");
         closeConfig();
         let nextRow = row.nextElementSibling;
         if (nextRow) {
@@ -438,7 +443,6 @@
         const boxId = $('#config-box').attr('data-box-id');
         const box = $(`#box${boxId}`);
         const bkgColor = rgbToHex(box.css('backgroundColor')) || '#FFFFFF';
-        console.log(bkgColor);
         $('.bkg-color-input').val(bkgColor);
         const html = box.find('.box-text')
 
@@ -539,12 +543,33 @@
                     error: function(xhr, status, error) {
                         console.log("fail");
                         console.log(arguments);
+                        //imageErrorHardcodedUpload(file);
                     }
                 });
             }
             event.preventDefault();
             event.stopPropagation();
         });
+    }
+
+    function imageErrorHardcodedUpload(file) {
+        //TODO to remove these lines when integrating back to the admin
+        var response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/5-20241106-100659567-1920x6501.jpg'}
+        var $box = $("#" + selectedBox.id);
+        var nextImgId = $box.find("img.box-image").length + 1;
+        $img = $("<img />").attr("src", response.url)
+                .addClass("box-image")
+                .attr("data-url", "")
+                .attr("data-motion", false)
+                .attr("data-alt", "")
+                .attr("data-title", "")
+                .attr("data-id", nextImgId);
+
+            var $box = $("#" + selectedBox.id);
+    //          $box.find("img.box-image").remove();
+            $box.append($img);
+        addPreviewImage({file, url: response.url},selectedBox.dataset.id, nextImgId - 1);
+        updateInputImgState(selectedBox.dataset.id);
     }
 
 
@@ -818,8 +843,8 @@
     }
 
     function addRowEvents() {
-        $(document).on('click', '.move-up', (event) => moveRowUp(event.target.closest(".row-wrapper")));
-        $(document).on('click', '.move-down', (event) => moveRowDown(event.target.closest(".row-wrapper")));
+        $(document).on('click', '.move-up', (event) => moveRowUp(event));
+        $(document).on('click', '.move-down', (event) => moveRowDown(event));
         $(document).on('click', '.row-remove-btn', (event) => removeRow(event));
     }
 
