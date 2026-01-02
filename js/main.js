@@ -210,7 +210,7 @@
             event.preventDefault();
             event.stopPropagation();
             img.parent().remove();
-            updateInputImgState(boxId);
+            
             const fileReader = document.getElementById("image-upload");
             fileReader.value = null;
             const box = $(`.box[data-id='${boxId}']`)[0];
@@ -220,6 +220,7 @@
             } else {
                 $(box).find("img.box-image").eq(imgId).remove();
             }
+            updateInputImgState(boxId);
         });
         img.append(removeBtn);
     }
