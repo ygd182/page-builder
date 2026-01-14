@@ -965,6 +965,7 @@
     function addPropertiesToBox($wrapper) {
         $wrapper.find('.box').each((i, box) => {
             console.log(box);
+            $(box).removeAttr('style');
             applyProperty($(box), 'padding');
             applyProperty($(box), 'margin');
         });
