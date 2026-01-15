@@ -965,6 +965,7 @@
     function addPropertiesToBox($wrapper) {
         $wrapper.find('.box').each((i, box) => {
             console.log(box);
+            $(box).removeAttr('style');
             applyProperty($(box), 'padding');
             applyProperty($(box), 'margin');
         });
@@ -1086,9 +1087,11 @@
     }
 
     function addspacingToExistingRow() {
-        const $rowWrapper = $('.row-wrapper');
-        const $row = $rowWrapper.find('.row');
-        addSpacingControlToRow($rowWrapper, $row);
+        $('.row-wrapper').each(function() {
+            const $rowWrapper = $(this);
+            const $row = $rowWrapper.find('.row');
+            addSpacingControlToRow($rowWrapper, $row);
+        });
     }
 
 	function setStartingIDCounter(){
