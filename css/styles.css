@@ -483,8 +483,12 @@ body {
 
 .page-builder .box.multi-image .box-image {
     width: 100%;
+    /*flex: 1 1 auto;*/
+    /*min-height: 0;*/
     object-fit: contain;
     display: block;
-  /*  min-height: 0;*/
-    flex: 1 1 auto;
+}
+
+.preview.page-builder .row .box {
+    max-height: none;
 }

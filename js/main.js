@@ -813,7 +813,8 @@
                 
                 newDoc.body.innerHTML = generateOutputPage().html();
                 newDoc.body.classList.add("page-builder");
-                
+                newDoc.body.classList.add("preview");
+
                 // Construct absolute URL for CSS to avoid MIME type errors
                 const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
                 const cssUrl = baseUrl + '/css/styles.css';

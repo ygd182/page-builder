@@ -59,15 +59,17 @@
                         // Image 1 is wider - give it full width
                         const img1Height = data.containerWidth / data.img1AspectRatio;
                         const remainingHeight = data.containerHeight - img1Height;
-                        console.log(remainingHeight);
                         data.$img1.css('max-height', 'none');
+                        //data.$img1.css('object-fit', 'fill');
+                        data.$img1.css('height', 'auto');
                         data.$img2.css('max-height', Math.max(0, remainingHeight) + 'px');
                     } else {
                         // Image 2 is wider - give it full width
                         const img2Height = data.containerWidth / data.img2AspectRatio;
                         const remainingHeight = data.containerHeight - img2Height;
-                                       console.log(remainingHeight);
                         data.$img2.css('max-height', 'none');
+                       // data.$img2.css('object-fit', 'fill');
+                        data.$img2.css('height', 'auto');
                         data.$img1.css('max-height', Math.max(0, remainingHeight) + 'px');
                     }
                 }
