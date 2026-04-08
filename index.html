@@ -20,8 +20,9 @@
    <script type="text/javascript" src="https://demo-dev2.omnisourcegear.com/admin/ckeditor/styles.js?t=I63C"></script>
    <script type="text/javascript" src="https://demo-dev2.omnisourcegear.com/admin/ckeditor/plugins/colordialog/plugin.js?t=I63C"></script>
    <script type="text/javascript" src="https://demo-dev2.omnisourcegear.com/admin/ckeditor/plugins/colordialog/lang/en.js?t=I63C"></script>
-    <script type="text/javascript" src="./js/spacing-lib.js"></script>
-    <script type="text/javascript" src="./js/main.js"></script>
+   <script type="text/javascript" src="./js/spacing-lib.js"></script>
+   <script type="text/javascript" src="./js/box-image-adjust.js"></script>
+   <script type="text/javascript" src="./js/main.js"></script>
    
 
 </head>
@@ -66,6 +67,11 @@
                         <option value="0" disabled="disabled" selected="selected">Please select an option</option>
                         <option value="1">Single Image</option>
                         <option value="2">Slideshow</option>
+                    </select>
+                    <select class="form-control" id="double-image-selector" style="display: none;">
+                        <option value="0" disabled="disabled" selected="selected">Please select an option</option>
+                        <option value="1">Single Image</option>
+                        <option value="2">Double Image</option>
                     </select>
                     <div id="image-upload-wrapper" style="display: none;">
                         <input class="btn" type="file" id="image-upload" accept="image/*" hidden>

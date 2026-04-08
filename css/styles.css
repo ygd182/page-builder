@@ -138,6 +138,16 @@ body {
     border: 1px solid #acacac;
     aspect-ratio: 1 / 1;
 }
+
+.page-builder .box.multi-image {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-builder .box.multi-image .box-text {
+    display: none;
+}
+
 .page-builder .box-text {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -149,6 +159,15 @@ body {
     left: 5px;
     top: 5px;
     font-size: 14px;
+}
+
+.page-builder .box.multi-image:before {
+    content: 'Double';
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    font-size: 14px;
+    z-index: 1;
 }
 .page-builder .box-actions {
     position: absolute;
@@ -401,8 +420,8 @@ body {
     height: 18px;
 }
 
-.page-builder select#image-selector {
-    height: 21.5px;
+.page-builder select#image-selector,
+.page-builder select#double-image-selector {
     margin-bottom: 10px;
 }
 
@@ -450,4 +469,26 @@ body {
 .page-builder .bkg-color-input {
     width: 45px;
     height: 34px;
+}
+
+/* Multi-image box styles */
+.page-builder .box.multi-image .image-container {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.page-builder .box.multi-image .box-image {
+    width: 100%;
+    /*flex: 1 1 auto;*/
+    /*min-height: 0;*/
+    object-fit: contain;
+    display: block;
+}
+
+.preview.page-builder .row .box {
+    max-height: none;
 }

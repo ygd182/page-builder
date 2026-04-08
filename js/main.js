@@ -7,6 +7,7 @@
     let idCounter = 0;
     let selectedBox = null;
     let spacingInstances = new Map(); // Track spacing instances for cleanup
+    let boxAdustmentLib = BoxImageAdjust;
 
     function resetSelect() {
         const $selector = $("#box-selector");
@@ -17,15 +18,30 @@
         const box = $(`.box[data-id='${boxId}']`)[0];
         const imgCount = $(box).find('img.box-image').length;
         const $selector = $("#image-selector");
+        const $doubleSelector = $("#double-image-selector");
+        
         if (imgCount >= 1) {
             if ($(box).hasClass('slider')) {
                 $("#image-upload").prop('disabled', false);
                 $('#slider-config').show();
                 $selector.val(2);
+            } else if ($(box).hasClass('multi-image')) {
+                // Double image mode: disable upload when 2 images
+                if (imgCount >= 2) {
+                    $("#image-upload").prop('disabled', true);
+                } else {
+                    $("#image-upload").prop('disabled', false);
+                }
+                $doubleSelector.val(2);
             } else {
+                // Single image mode
                 $("#image-upload").prop('disabled', true);
                 $('#slider-config').hide();
-                $selector.val(1);
+                if ($selector.is(':visible')) {
+                    $selector.val(1);
+                } else if ($doubleSelector.is(':visible')) {
+                    $doubleSelector.val(1);
+                }
             }
         } else {
             $("#image-upload").prop('disabled', false);
@@ -158,11 +174,15 @@
 
         if (size == 4) {
             $('#image-selector').show();
+            $('#double-image-selector').hide();
         } else {
-            $('#image-upload-wrapper').show();
+            // For box 1x1 and 1x2, show double-image-selector
+            $('#double-image-selector').show();
+            $('#image-selector').hide();
         }
         if (imgCount > 0) {
             loadPreviewImages(id);
+            $('#image-upload-wrapper').show();
             if ($(box).hasClass('slider')) {
                 loadSliderConfig($(box));
             }
@@ -405,12 +425,16 @@
         closeResetSliderConfig();
         $('#spacing-wrapper').empty();
         $('#config-bkg-img').hide();
+        const $doubleSelector = $("#double-image-selector");
+        $doubleSelector.val(0);
     }
 
     function closeImageSelector() {
         singleImage = true;
         $('#image-selector').hide();
+        $('#double-image-selector').hide();
         $('#image-upload-wrapper').hide();
+        
     }
 
     function rgbToHex(color) {
@@ -470,6 +494,7 @@
         const boxId = $('#config-box').attr('data-box-id');
         const box = $(`#box${boxId}`);
         box.find("img.box-image").remove();
+        box.find('.image-container').remove();
         box.children('.box-text')[0].textContent = '';
         box[0].style.color = '';
         box[0].style.backgroundColor = '';
@@ -477,6 +502,7 @@
         removeBoxAttr('data-seconds');
         removeBoxAttr('data-randomize-order');
         box.removeClass('slider');
+        box.removeClass('multi-image');
     }
 
     function resetConfigBox() {
@@ -532,8 +558,21 @@
                                 .attr("data-id", nextImgId);
 
                             var $box = $("#" + selectedBox.id);
-                            //$box.find("img.box-image").remove();
-                            $box.append($img);
+                            
+                            // Check if box is multi-image and needs container
+                            if ($box.hasClass('multi-image')) {
+                                let $container = $box.find('.image-container');
+                                if ($container.length === 0) {
+                                    $container = $('<div class="image-container"></div>');
+                                    $box.append($container);
+                                }
+                                $container.append($img);
+                                // Reinitialize box image adjustment for multi-image boxes
+                                boxAdustmentLib.reinit();
+                            } else {
+                                $box.append($img);
+                            }
+                            
                             addPreviewImage({file, url: response.url},selectedBox.dataset.id, nextImgId - 1);
                             updateInputImgState(selectedBox.dataset.id);
                         }
@@ -544,7 +583,7 @@
                     error: function(xhr, status, error) {
                         console.log("fail");
                         console.log(arguments);
-                        //imageErrorHardcodedUpload(file);
+                        imageErrorHardcodedUpload(file);
                     }
                 });
             }
@@ -555,9 +594,12 @@
 
     function imageErrorHardcodedUpload(file) {
         //TODO to remove these lines when integrating back to the admin
-        var response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/5-20241106-100659567-1920x6501.jpg'}
+        var response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/TruGreen_homepage_bags.jpg'}
         var $box = $("#" + selectedBox.id);
         var nextImgId = $box.find("img.box-image").length + 1;
+        if (nextImgId > 1) {
+            response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/3-20250630-154534622-1000x1000.jpg'}
+        }
         $img = $("<img />").attr("src", response.url)
                 .addClass("box-image")
                 .attr("data-url", "")
@@ -566,9 +608,22 @@
                 .attr("data-title", "")
                 .attr("data-id", nextImgId);
 
-            var $box = $("#" + selectedBox.id);
-    //          $box.find("img.box-image").remove();
+        var $box = $("#" + selectedBox.id);
+        
+        // Check if box is multi-image and needs container
+        if ($box.hasClass('multi-image')) {
+            let $container = $box.find('.image-container');
+            if ($container.length === 0) {
+                $container = $('<div class="image-container"></div>');
+                $box.append($container);
+            }
+            $container.append($img);
+            // Reinitialize box image adjustment for multi-image boxes
+            boxAdustmentLib.reinit();
+        } else {
             $box.append($img);
+        }
+        
         addPreviewImage({file, url: response.url},selectedBox.dataset.id, nextImgId - 1);
         updateInputImgState(selectedBox.dataset.id);
     }
@@ -752,14 +807,44 @@
                 const newDoc = newWindow.document;
 
                 // Write the dynamic HTML content to the new document
-                newDoc.write(generateOutputPage().html());
+                newDoc.open();
+                newDoc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body></body></html>');
+                newDoc.close();
+                
+                newDoc.body.innerHTML = generateOutputPage().html();
                 newDoc.body.classList.add("page-builder");
+                newDoc.body.classList.add("preview");
+
+                // Construct absolute URL for CSS to avoid MIME type errors
+                const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+                const cssUrl = baseUrl + '/css/styles.css';
+                const jsUrl = baseUrl + '/js/box-image-adjust.js';
                 
                 const cssLink = newWindow.document.createElement("link");
                 cssLink.rel = "stylesheet";
                 cssLink.type = "text/css";
-                cssLink.href = "../page-builder/css/styles.css"; // Replace with the actual path to your CSS file
+                cssLink.href = cssUrl;
                 newDoc.head.appendChild(cssLink);
+                
+                // Load jQuery first
+                const jQueryScript = newWindow.document.createElement("script");
+                jQueryScript.src = "https://code.jquery.com/jquery-3.6.0.min.js";
+                jQueryScript.onload = function() {
+                    // Load box-image-adjust.js after jQuery is loaded
+                    const jsScript = newWindow.document.createElement("script");
+                    jsScript.src = jsUrl;
+                    jsScript.onload = function() {
+                        // Initialize BoxImageAdjust after script loads
+                        // Use setTimeout to ensure the script is fully executed
+                        setTimeout(function() {
+                            if (newWindow.BoxImageAdjust) {
+                                newWindow.BoxImageAdjust.init(newWindow);
+                            }
+                        }, 100);
+                    };
+                    newDoc.body.appendChild(jsScript);
+                };
+                newDoc.body.appendChild(jQueryScript);
             }
         });
     }
@@ -1029,6 +1114,17 @@
                     </div>
                 `);
             }
+            
+            // Fix multi-image boxes: wrap images in .image-container if multi-image class
+            if ($box.hasClass('multi-image')) {
+                const $images = $box.find('img.box-image');
+                if ($images.length > 0 && $box.find('.image-container').length === 0) {
+                    // Create container and move images into it
+                    const $container = $('<div class="image-container"></div>');
+                    $images.appendTo($container);
+                    $box.append($container);
+                }
+            }
 
             addRemoveButtonClickEvent($box.find(".remove-btn"));
         });
@@ -1038,8 +1134,11 @@
 
     function resetImageSelect() {
         const $selector = $("#image-selector");
+        const $doubleSelector = $("#double-image-selector");
         $selector.val(0);
+        $doubleSelector.val(0);
         $selector.trigger("change");
+        $doubleSelector.trigger("change");
     }
 
     function closeResetSliderConfig() {
@@ -1071,6 +1170,31 @@
                     $('#slider-config-wrapper').show();
                     $('#config-bkg-img').hide();
                     box.addClass('slider')
+                }
+            } else {
+                $('#image-upload-wrapper').hide();
+            }
+        });
+        
+        // Handle double-image-selector for box 1x1 and 1x2
+        $('#config-image').on('change', '#double-image-selector', (event)=> {
+            const boxId = $('#config-box').attr('data-box-id');
+            const box = $(`#box${boxId}`);
+            event.preventDefault();
+            event.stopPropagation();
+            resetBox();
+            resetConfigBox();
+            
+            if (event.target.value > 0) {
+                $('#image-upload-wrapper').show();
+                if (Number(event.target.value) === 1) {
+                    // Single image
+                    box.removeClass('multi-image');
+                    $('#config-bkg-img').show();
+                } else {
+                    // Double image
+                    box.addClass('multi-image');
+                    $('#config-bkg-img').hide();
                 }
             } else {
                 $('#image-upload-wrapper').hide();
@@ -1128,6 +1252,7 @@
         addCKEditor();
 
         addSaveEvent();
-        addLoadEvent()
+        addLoadEvent();
+        boxAdustmentLib.init();
     });
 })();
