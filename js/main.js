@@ -826,7 +826,7 @@
 
     function videoErrorHardcodedUpload(file) {
         //TODO to remove these lines when integrating back to the admin
-        var response = { url: '/assets/video-sample.webm'}
+        var response = { url: 'assets/video-sample.webm'}
         var $box = $("#" + selectedBox.id);
         var nextVideoId = $box.find("video.box-video").length + 1;
        
