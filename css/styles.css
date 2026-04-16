@@ -117,6 +117,7 @@ body {
     font-size: 15px;
     line-height: 1;
     width: 21.5px;
+    height: 21.5px;
     text-align: center;
     cursor: pointer;
 }
@@ -240,6 +241,7 @@ body {
     font-size: 15px;
     line-height: 1;
     width: 21.5px;
+    height: 21.5px;
     text-align: center;
     cursor: pointer;
 }
@@ -326,19 +328,14 @@ body {
 }
 .page-builder button,
 .page-builder .custom-upload-button {
-    /*display: inline-flex;*/
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    /*
-    padding: 1px 6px;
-    background-color: rgb(239, 239, 239); /* Light gray background */
     color: #333; /* Dark gray icon color */
-    */
     cursor: pointer;
     border-radius: 2px;
     border: 1px solid black;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
-    /*font-size: 13px;*/
 }
 .page-builder button:hover,
 .page-builder .custom-upload-button:hover {
@@ -371,7 +368,7 @@ body {
 }
 
 .page-builder .type-select-row {
-    margin-bottom: 10px;
+    margin: 10px 0;
 }
 
 /* Toggle Switch */
