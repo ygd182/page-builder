@@ -16,6 +16,14 @@
 
     function updateInputImgState(boxId) {
         const box = $(`.box[data-id='${boxId}']`)[0];
+        if (!box) {
+            return;
+        }
+
+        if ($(box).find('video.box-video').length > 0) {
+            return;
+        }
+
         const imgCount = $(box).find('img.box-image').length;
         const $selector = $("#image-selector");
         const $doubleSelector = $("#double-image-selector");
@@ -47,6 +55,40 @@
             $("#image-upload").prop('disabled', false);
             $('#slider-config').hide();
         }
+    }
+
+    function getBoxContentType($box) {
+        if ($box.find('video.box-video').length > 0) {
+            return 'video';
+        }
+
+        if ($box.find('img.box-image').length > 0 || $box.hasClass('slider') || $box.hasClass('multi-image')) {
+            return 'image';
+        }
+
+        return 'text';
+    }
+
+    function setConfigMode(contentType) {
+        $('#content-type-selector').val(contentType);
+
+        if (contentType === 'image') {
+            $('#config-image').show();
+            $('#config-video').hide();
+            $('#config-text').hide();
+            return;
+        }
+
+        if (contentType === 'video') {
+            $('#config-image').hide();
+            $('#config-video').show();
+            $('#config-text').hide();
+            return;
+        }
+
+        $('#config-image').hide();
+        $('#config-video').hide();
+        $('#config-text').show();
     }
 
     function createBox(boxData) {
@@ -168,36 +210,50 @@
         name.innerHTML = 'Box ' + box.getAttribute('data-name');
         const $box = $(box);
         const imgCount = $box.find('img.box-image').length;
+        const videoCount = $box.find('video.box-video').length;
         const size = box.dataset.size;
+        const contentType = getBoxContentType($box);
         
         selectedBox = box;
 
-        if (size == 4) {
-            $('#image-selector').show();
-            $('#double-image-selector').hide();
-        } else {
-            // For box 1x1 and 1x2, show double-image-selector
-            $('#double-image-selector').show();
-            $('#image-selector').hide();
-        }
-        if (imgCount > 0) {
+        setConfigMode(contentType);
+
+        if (contentType === 'image') {
+            if (size == 4) {
+                $('#image-selector').show();
+                $('#double-image-selector').hide();
+            } else {
+                $('#double-image-selector').show();
+                $('#image-selector').hide();
+            }
+
             loadPreviewImages(id);
             $('#image-upload-wrapper').show();
             if ($(box).hasClass('slider')) {
                 loadSliderConfig($(box));
             }
-            $('#toggleButton').removeClass('active');           
-            $('#config-image').show();
-            $('#config-text').hide();
+
+            $('#config-bkg-img').show();
+            if ($(box).hasClass('multi-image') || $(box).hasClass('slider')) {
+                $('#config-bkg-img').hide();
+            }
+        } else if (contentType === 'video') {
+            loadPreviewVideos(id);
+            if (videoCount > 0) {
+                $('#video-upload-wrapper').show();
+            }
+
+            $('#config-bkg-video').show();
         } else {
             loadTextAndBkg();
-            $('#toggleButton').addClass('active');
-            $('#config-text').show();
-            $('#config-image').hide();
         }
         
         const fileReader = document.getElementById("image-upload");
         fileReader.value = null;
+        const videoReader = document.getElementById("video-upload");
+        if (videoReader) {
+            videoReader.value = null;
+        }
 
         configBox.className = '';
         const spacingEl = $(configBox).find('#spacing-wrapper');
@@ -207,7 +263,9 @@
         spacingLibInstance.applyTo($box);
         spacingLibInstance.loadFromElement(spacingEl, $box);
         spacingInstances.set($box[0], spacingLibInstance); // Track instance
-        updateInputImgState(id);
+        if (contentType === 'image' || imgCount > 0) {
+            updateInputImgState(id);
+        }
     }
 
     function loadPreviewImages(boxId) {
@@ -217,6 +275,16 @@
                 url: $(this).attr('src')
             };
             addPreviewImage(imgData, boxId, index);
+        });
+    }
+
+    function loadPreviewVideos(boxId) {
+        const box = $(`.box[data-id='${boxId}']`)[0];
+        $(box).find('video.box-video').each(function(index) {
+            const videoData = {
+                url: $(this).attr('src')
+            };
+            addPreviewVideo(videoData, boxId, index);
         });
     }
 
@@ -370,6 +438,61 @@
 
     }
 
+    function addRemoveVideoPreviewButton(wrapper, boxId, videoId) {
+        const removeBtn = document.createElement("a");
+        removeBtn.textContent = "Remove Video";
+        removeBtn.classList.add("remove-video-link");
+        removeBtn.type = "button";
+        removeBtn.href = '';
+        removeBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            wrapper.parent().remove();
+
+            const fileReader = document.getElementById("video-upload");
+            if (fileReader) {
+                fileReader.value = null;
+            }
+
+            const box = $(`.box[data-id='${boxId}']`)[0];
+            if (!box) {
+                return;
+            }
+
+            if (videoId === 0) {
+                $(box).find("video.box-video").remove();
+            } else {
+                $(box).find("video.box-video").eq(videoId).remove();
+            }
+        });
+
+        wrapper.append(removeBtn);
+    }
+
+    function addPreviewVideo(videoFile, boxId, videoId) {
+        const video = $('<video muted playsinline></video>');
+        video.attr('src', videoFile.url);
+        const wrapper = $('<div class="preview-item"></div>');
+        const videoWrapper = $('<div></div>');
+        videoWrapper.addClass('preview-video-wrapper');
+        videoWrapper.append(video);
+        wrapper.append(videoWrapper);
+
+        const properties = $('<div class="image-center-content"></div>');
+        properties.append('<div class="image-content-row"><span>Type:</span><span>Video</span></div>');
+        addRemoveVideoPreviewButton(properties, boxId, videoId);
+        wrapper.append(properties);
+
+        if ($('.video-preview-list').children().length === 0) {
+            $('.video-preview-list').append('<div class="preview-item"><div>Video</div><div>Properties</div></div>');
+        }
+
+        $('.video-preview-list').append(wrapper);
+        if ($('#video-upload-wrapper').is(':hidden')) {
+            $('#video-upload-wrapper').show();
+        }
+    }
+
     function addTextContent(box, text) {
         const div = document.createElement('div');
         div.className = 'box-text';
@@ -408,6 +531,7 @@
         }
         
         $('.img-preview-list').html('');
+        $('.video-preview-list').html('');
         let configBox = document.getElementById("config-box");
         configBox.setAttribute('data-box-id', null);
         let name = document.getElementById('box-name');
@@ -417,24 +541,34 @@
         selectedBox = null;
         const fileReader = document.getElementById("image-upload");
         fileReader.value = null;
+        const videoReader = document.getElementById("video-upload");
+        if (videoReader) {
+            videoReader.value = null;
+        }
         $('#text-input')[0].value = null;
+        $('#content-type-selector').val('image');
         $('#config-image').show();
+        $('#config-video').hide();
         $('#config-text').hide();
-        $('#toggleButton').removeClass('active');
         closeImageSelector();
+        closeVideoSelector();
         closeResetSliderConfig();
         $('#spacing-wrapper').empty();
         $('#config-bkg-img').hide();
+        $('#config-bkg-video').hide();
         const $doubleSelector = $("#double-image-selector");
         $doubleSelector.val(0);
     }
 
     function closeImageSelector() {
-        singleImage = true;
         $('#image-selector').hide();
         $('#double-image-selector').hide();
         $('#image-upload-wrapper').hide();
         
+    }
+
+    function closeVideoSelector() {
+        $('#video-upload-wrapper').hide();
     }
 
     function rgbToHex(color) {
@@ -494,6 +628,7 @@
         const boxId = $('#config-box').attr('data-box-id');
         const box = $(`#box${boxId}`);
         box.find("img.box-image").remove();
+        box.find("video.box-video").remove();
         box.find('.image-container').remove();
         box.children('.box-text')[0].textContent = '';
         box[0].style.color = '';
@@ -508,6 +643,10 @@
     function resetConfigBox() {
         const fileReader = document.getElementById("image-upload");
         fileReader.value = null;
+        const videoReader = document.getElementById("video-upload");
+        if (videoReader) {
+            videoReader.value = null;
+        }
        	$('#text-input')[0].value = null;
         
         // Ensure CKEditor exists before using it
@@ -515,6 +654,7 @@
         CKEDITOR.instances["text-input"].setData("");
         
         $('.img-preview-list').html('');
+        $('.video-preview-list').html('');
         if (selectedBox) {
             updateInputImgState(selectedBox.dataset.id);
         }
@@ -600,7 +740,7 @@
         if (nextImgId > 1) {
             response = { url: 'https://demo-dev2.omnisourcegear.com/OVERRIDES/Omni.demo/storage/home/3-20250630-154534622-1000x1000.jpg'}
         }
-        $img = $("<img />").attr("src", response.url)
+        const $img = $("<img />").attr("src", response.url)
                 .addClass("box-image")
                 .attr("data-url", "")
                 .attr("data-motion", false)
@@ -626,6 +766,80 @@
         
         addPreviewImage({file, url: response.url},selectedBox.dataset.id, nextImgId - 1);
         updateInputImgState(selectedBox.dataset.id);
+    }
+
+    function addVideoUploadEvent() {
+        document.getElementById("video-upload").addEventListener("change", (event) => {
+            if (selectedBox && event.target.files.length > 0) {
+
+                let file = event.target.files[0];
+                var formData = new FormData();
+
+                //TODO to remove this line
+                var Cookies = {get: (param)=> 'token'};
+
+                formData.append("section", "content-page");
+                formData.append("formFileFieldName", "uploadedFile");
+                formData.append("CSRFToken", Cookies?.get("CSRF"));
+
+                formData.append("uploadedFile", file); // "uploadedFile" is the name ColdFusion will expect
+
+                $.ajax({
+                    type: "POST",
+                    data: formData,
+                    processData: false, // Important for file uploads
+                    contentType: false, // Important for file uploads
+                    url: "cfc/file.cfc?method=upload",
+                    success: function(response) {
+                        console.log(response);
+
+                        if (response.success == true){
+                            var $box = $("#" + selectedBox.id);
+                            var nextVideoId = $box.find("video.box-video").length + 1;
+
+                            $box.find("video.box-video").remove();
+                            const $video = $("<video muted playsinline controls />").attr("src", response.url)
+                                .addClass("box-video")
+                                .attr("data-url", "")
+                                .attr("data-id", nextVideoId);
+
+                            $box.append($video);
+                            
+                            $('.video-preview-list').html('');
+                            addPreviewVideo({file, url: response.url}, selectedBox.dataset.id, nextVideoId - 1);
+                        }
+                        else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("fail");
+                        console.log(arguments);
+                        videoErrorHardcodedUpload(file);
+                    }
+                });
+            }
+            event.preventDefault();
+            event.stopPropagation();
+        });
+    }
+
+    function videoErrorHardcodedUpload(file) {
+        //TODO to remove these lines when integrating back to the admin
+        var response = { url: '/assets/video-sample.webm'}
+        var $box = $("#" + selectedBox.id);
+        var nextVideoId = $box.find("video.box-video").length + 1;
+       
+        $box.find("video.box-video").remove();
+        const $video = $("<video muted playsinline controls />").attr("src", response.url)
+                .addClass("box-video")
+                .attr("data-url", "")
+                .attr("data-id", nextVideoId);
+
+        $box.append($video);
+        
+        $('.video-preview-list').html('');
+        addPreviewVideo({file, url: response.url}, selectedBox.dataset.id, nextVideoId - 1);
     }
 
 
@@ -774,19 +988,46 @@
 
     }
 
-    function addConfigToggleEvent() {
-        document.getElementById("toggleButton").addEventListener("click", function(event) {
-            this.classList.toggle("active");
-            if (this.classList.contains('active')) {
-                $('#config-text').show();
-                $('#config-image').hide();
-                resetImageSelect();
-            } else {
-                $('#config-image').show();
-                $('#config-text').hide();
+    function addContentTypeSelectorEvent() {
+        $(document).on('change', '#content-type-selector', (event) => {
+            if (!selectedBox) {
+                return;
             }
+
+            const selectedType = event.target.value;
+            const boxId = $('#config-box').attr('data-box-id');
+            const box = $(`#box${boxId}`);
+
             resetBox();
             resetConfigBox();
+
+            if (selectedType === 'image') {
+                setConfigMode('image');
+
+                if (box.data('size') == 4) {
+                    $('#image-selector').show();
+                    $('#double-image-selector').hide();
+                } else {
+                    $('#double-image-selector').show();
+                    $('#image-selector').hide();
+                }
+
+                $('#config-bkg-img').show();
+            } else if (selectedType === 'video') {
+                setConfigMode('video');
+                closeImageSelector();
+                $('#video-upload-wrapper').show();
+                $('#config-bkg-video').show();
+            } else {
+                setConfigMode('text');
+                closeImageSelector();
+                closeVideoSelector();
+                $('#config-bkg-img').hide();
+                $('#config-bkg-video').hide();
+                loadTextAndBkg();
+            }
+
+            event.preventDefault();
             event.stopPropagation();
         });
     }
@@ -938,8 +1179,9 @@
         $(document).on('click', '.config-remove-btn', (event) => closeConfig());
         addImageTypeSelectorEvent();
         addConfigTextChange();
-        addConfigToggleEvent();
+        addContentTypeSelectorEvent();
         addImageUploadEvent();
+        addVideoUploadEvent();
         addSliderConfigEvents();
         addConfigBackgroundChange();
         addResetBackgroundEvent();
@@ -1110,7 +1352,7 @@
             if ($box.find(".box-actions").length === 0) {
                 $box.prepend(`
                     <div class="box-actions">
-                        < type="button" class="remove-btn"><i class="fa fa-times"></i></>
+                        <button type="button" class="remove-btn"><i class="fa fa-times"></i></button>
                     </div>
                 `);
             }
@@ -1142,7 +1384,7 @@
     }
 
     function closeResetSliderConfig() {
-        $('#slider-config-wrapper').hide();
+        $('#slider-config').hide();
         $('#secondsPerSlideInput').val("");
         $('#randomizeOrderCheckbox').prop("checked", false);
     }
@@ -1155,19 +1397,16 @@
             event.stopPropagation();
             resetBox();
             resetConfigBox();
-            closeResetSliderConfig
+            closeResetSliderConfig();
             if (event.target.value > 0) {
                 $('#image-upload-wrapper').show();
                 if (Number(event.target.value) === 1) {
                     //single image
-                  //  closeResetSliderConfig();
-                    singleImage = true;
                     box.removeClass('slider');
                     $('#config-bkg-img').show();
                 } else {
                     //slider
-                    singleImage = false;
-                    $('#slider-config-wrapper').show();
+                    $('#slider-config').show();
                     $('#config-bkg-img').hide();
                     box.addClass('slider')
                 }
