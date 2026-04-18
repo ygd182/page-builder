@@ -798,7 +798,7 @@
                             var nextVideoId = $box.find("video.box-video").length + 1;
 
                             $box.find("video.box-video").remove();
-                            const $video = $("<video muted playsinline controls />").attr("src", response.url)
+                            const $video = $("<video muted playsinline muted autoplay />").attr("src", response.url)
                                 .addClass("box-video")
                                 .attr("data-url", "")
                                 .attr("data-id", nextVideoId);
@@ -831,7 +831,7 @@
         var nextVideoId = $box.find("video.box-video").length + 1;
        
         $box.find("video.box-video").remove();
-        const $video = $("<video muted playsinline controls />").attr("src", response.url)
+        const $video = $("<video muted playsinline muted autoplay />").attr("src", response.url)
                 .addClass("box-video")
                 .attr("data-url", "")
                 .attr("data-id", nextVideoId);
