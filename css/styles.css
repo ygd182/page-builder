@@ -516,6 +516,7 @@ body {
 
 .preview.page-builder {
     gap: 0;
+    margin: 0;
 }
 
 .preview.page-builder .row .box {
